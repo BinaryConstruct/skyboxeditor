@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <defs>
+    <radialGradient id="core" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fff7e8"/>
+      <stop offset="28%" stop-color="#ffd9a0" stop-opacity="0.95"/>
+      <stop offset="62%" stop-color="#c98d4b" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#c98d4b" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="haze" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#2b3a5e" stop-opacity="0.9"/>
+      <stop offset="70%" stop-color="#141b30" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#0a0e1a" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="armFade" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#eef4ff" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#9fc3ff" stop-opacity="0.15"/>
+    </linearGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="1.1"/>
+    </filter>
+    <filter id="softer" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="2.6"/>
+    </filter>
+  </defs>
+  <!-- tilt: squash the whole disc and rotate it -->
+  <g transform="translate(32 32) rotate(-27) scale(1 0.52) translate(-32 -32)">
+    <ellipse cx="32" cy="32" rx="30" ry="30" fill="url(#haze)"/>
+    <g filter="softer" opacity="0.55">
+      <path d="M35.2 32.0 L35.32 32.55 L35.34 33.14 L35.27 33.76 L35.08 34.39 L34.78 35.01 L34.36 35.6 L33.83 36.14 L33.18 36.61 L32.43 36.98 L31.58 37.23 L30.67 37.35 L29.69 37.32 L28.69 37.11 L27.69 36.73 L26.72 36.16 L25.81 35.4 L24.99 34.45 L24.31 33.33 L23.8 32.05 L23.5 30.64 L23.42 29.12 L23.6 27.54 L24.07 25.93 L24.83 24.34 L25.89 22.82 L27.25 21.43 L28.9 20.22 L30.82 19.26 L32.98 18.59 L35.33 18.27 L37.82 18.34 L40.39 18.85 L42.96 19.82 L45.46 21.26 L47.81 23.19 L49.9 25.6 L51.66 28.46 L52.99 31.72 L53.8 35.34 L54.02 39.22" fill="none" stroke="#7ea6e8" stroke-width="7" stroke-linecap="round" filter="url(#softer)"/>
+      <path d="M28.8 32.0 L28.68 31.45 L28.66 30.86 L28.73 30.24 L28.92 29.61 L29.22 28.99 L29.64 28.4 L30.17 27.86 L30.82 27.39 L31.57 27.02 L32.42 26.77 L33.33 26.65 L34.31 26.68 L35.31 26.89 L36.31 27.27 L37.28 27.84 L38.19 28.6 L39.01 29.55 L39.69 30.67 L40.2 31.95 L40.5 33.36 L40.58 34.88 L40.4 36.46 L39.93 38.07 L39.17 39.66 L38.11 41.18 L36.75 42.57 L35.1 43.78 L33.18 44.74 L31.02 45.41 L28.67 45.73 L26.18 45.66 L23.61 45.15 L21.04 44.18 L18.54 42.74 L16.19 40.81 L14.1 38.4 L12.34 35.54 L11.01 32.28 L10.2 28.66 L9.98 24.78" fill="none" stroke="#7ea6e8" stroke-width="7" stroke-linecap="round" filter="url(#softer)"/>
+    </g>
+    <path d="M35.2 32.0 L35.32 32.55 L35.34 33.14 L35.27 33.76 L35.08 34.39 L34.78 35.01 L34.36 35.6 L33.83 36.14 L33.18 36.61 L32.43 36.98 L31.58 37.23 L30.67 37.35 L29.69 37.32 L28.69 37.11 L27.69 36.73 L26.72 36.16 L25.81 35.4 L24.99 34.45 L24.31 33.33 L23.8 32.05 L23.5 30.64 L23.42 29.12 L23.6 27.54 L24.07 25.93 L24.83 24.34 L25.89 22.82 L27.25 21.43 L28.9 20.22 L30.82 19.26 L32.98 18.59 L35.33 18.27 L37.82 18.34 L40.39 18.85 L42.96 19.82 L45.46 21.26 L47.81 23.19 L49.9 25.6 L51.66 28.46 L52.99 31.72 L53.8 35.34 L54.02 39.22" fill="none" stroke="#dcE9ff" stroke-width="2.6" stroke-linecap="round" filter="url(#soft)" opacity="0.95"/>
+    <path d="M28.8 32.0 L28.68 31.45 L28.66 30.86 L28.73 30.24 L28.92 29.61 L29.22 28.99 L29.64 28.4 L30.17 27.86 L30.82 27.39 L31.57 27.02 L32.42 26.77 L33.33 26.65 L34.31 26.68 L35.31 26.89 L36.31 27.27 L37.28 27.84 L38.19 28.6 L39.01 29.55 L39.69 30.67 L40.2 31.95 L40.5 33.36 L40.58 34.88 L40.4 36.46 L39.93 38.07 L39.17 39.66 L38.11 41.18 L36.75 42.57 L35.1 43.78 L33.18 44.74 L31.02 45.41 L28.67 45.73 L26.18 45.66 L23.61 45.15 L21.04 44.18 L18.54 42.74 L16.19 40.81 L14.1 38.4 L12.34 35.54 L11.01 32.28 L10.2 28.66 L9.98 24.78" fill="none" stroke="#cfe2ff" stroke-width="2.6" stroke-linecap="round" filter="url(#soft)" opacity="0.9"/>
+    <ellipse cx="32" cy="32" rx="13" ry="13" fill="url(#core)"/>
+    <ellipse cx="32" cy="32" rx="5.5" ry="5.5" fill="#fff3dc"/>
+  </g>
+  <!-- a few foreground stars, unsquashed -->
+  <circle cx="12" cy="14" r="0.9" fill="#cfe2ff" opacity="0.9"/>
+  <circle cx="52" cy="10" r="0.7" fill="#ffe9c9" opacity="0.85"/>
+  <circle cx="55" cy="47" r="0.8" fill="#cfe2ff" opacity="0.8"/>
+  <circle cx="9" cy="50" r="0.6" fill="#ffffff" opacity="0.7"/>
+</svg>

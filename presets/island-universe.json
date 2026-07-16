@@ -1,0 +1,62 @@
+{
+  "version": 2,
+  "layers": [
+    {
+      "type": "noise",
+      "name": "Abyss",
+      "seed": 2,
+      "noiseType": "fbm",
+      "octaves": 4,
+      "scale": 1.0,
+      "powerAmount": 3,
+      "innerColor": { "r": 0.02, "g": 0.03, "b": 0.08, "a": 1 },
+      "outerColor": { "r": 0, "g": 0, "b": 0.01, "a": 1 },
+      "previewTextureSize": 512
+    },
+    {
+      "type": "points",
+      "name": "Sparse Halo Stars",
+      "seed": 17,
+      "numPoints": 2500,
+      "pointSize": 1,
+      "pointSizeMax": 4,
+      "colorMode": "blackbody",
+      "tempMin": 3000,
+      "tempMax": 9000,
+      "magnitudePower": 2
+    },
+    {
+      "type": "billboards",
+      "name": "Deep Field Galaxies",
+      "seed": 31,
+      "numBillboards": 55,
+      "minSize": 0.008,
+      "maxSize": 0.03,
+      "texture": "proc:galaxy-smudge",
+      "randomRotation": true,
+      "aspectJitter": 0.6,
+      "nearColor": { "r": 0.9, "g": 0.85, "b": 0.8, "a": 0.5 },
+      "farColor": { "r": 0.55, "g": 0.6, "b": 0.9, "a": 0.35 }
+    },
+    {
+      "type": "galaxy",
+      "name": "Island Universe",
+      "seed": 6,
+      "dirLonDeg": 28,
+      "dirLatDeg": 18,
+      "apparentSize": 0.55,
+      "tiltDeg": 58,
+      "spinDeg": 25,
+      "arms": 2,
+      "windings": 1.35,
+      "spread": 0.35,
+      "bulgeSize": 0.24,
+      "bulgeKelvin": 4300,
+      "armKelvin": 10500,
+      "numStars": 22000,
+      "starSize": 2,
+      "coreGlow": 1,
+      "thickness": 0.06
+    }
+  ]
+}

@@ -1,0 +1,621 @@
+.app {
+  display: flex;
+  /* controls live in the right-hand sidebar; the preview fills the left */
+  flex-direction: row-reverse;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 400px;
+  flex: none;
+  padding: 14px;
+  background: #14161c;
+  border-left: 1px solid #262a33;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* dark scrollbars to match the theme */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #303645 #14161c;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #303645;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3d4456;
+}
+
+.sidebar h1 {
+  font-size: 18px;
+  margin: 0;
+  letter-spacing: 0.04em;
+}
+
+.sidebar h2 {
+  font-size: 12px;
+  margin: 8px 0 0;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #8b93a5;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: #8b93a5;
+}
+
+.field select {
+  background: #1d212b;
+  color: #e6e9f0;
+  border: 1px solid #303645;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 13px;
+}
+
+.layer-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 4px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  /* keep the stack compact so the inspector stays on screen */
+  max-height: 30vh;
+  overflow-y: auto;
+  flex: none;
+}
+
+/* Photoshop-style panel block: a slightly inset well raised off the sidebar */
+.layer-panel {
+  display: flex;
+  flex-direction: column;
+  flex: none;
+  background: #101218;
+  border: 1px solid #262a33;
+  border-radius: 8px;
+  padding: 10px 12px 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.layer-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: #1a1e27;
+  border: 1px solid #262a33;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.layer-list li.hidden-layer {
+  opacity: 0.45;
+}
+
+.eye {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: #8ec9ff;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.eye:hover {
+  background: #262c38;
+}
+
+.titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.titlebar h1 {
+  line-height: 1.15;
+}
+
+.tagline {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  color: #8b93a7;
+  letter-spacing: 0.01em;
+}
+
+.file-buttons,
+.add-buttons {
+  display: flex;
+  gap: 4px;
+}
+
+/* full-width grid of add-layer buttons under the Layers heading */
+.add-layer-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+  margin-top: 8px;
+  /* clear breathing room before the layer list well below */
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #22262f;
+}
+
+.add-layer-grid button {
+  background: #1d212b;
+  color: #aeb6c8;
+  border: 1px solid #303645;
+  border-radius: 5px;
+  padding: 3px 0;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.add-layer-grid button:hover {
+  background: #262c38;
+  color: #e6e9f0;
+}
+
+.file-buttons button,
+.add-buttons button,
+.row-actions button {
+  background: #1d212b;
+  color: #aeb6c8;
+  border: 1px solid #303645;
+  border-radius: 5px;
+  padding: 3px 7px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.file-buttons button:hover,
+.add-buttons button:hover,
+.row-actions button:hover:not(:disabled) {
+  background: #262c38;
+  color: #e6e9f0;
+}
+
+.file-buttons button.active {
+  background: #2a3350;
+  border-color: #4a5aa8;
+  color: #e6e9f0;
+}
+
+.export-panel {
+  background: #171a22;
+  border: 1px solid #3a4460;
+  border-radius: 6px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: none;
+}
+
+.export-go {
+  background: #2a3350;
+  color: #e6e9f0;
+  border: 1px solid #4a5aa8;
+  border-radius: 6px;
+  padding: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.export-go:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  flex: none;
+}
+
+.tabs button {
+  flex: 1;
+  background: #1a1e27;
+  color: #8b93a5;
+  border: 1px solid #262a33;
+  border-radius: 6px;
+  padding: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.tabs button.active {
+  background: #232a3f;
+  border-color: #4a5aa8;
+  color: #e6e9f0;
+}
+
+.asset-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  overflow-x: hidden; /* sidebar tabs scroll vertically only */
+  min-height: 0;
+}
+
+.asset-tab h2 {
+  font-size: 12px;
+  margin: 4px 0 0;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #8b93a5;
+}
+
+.asset-grid {
+  display: grid;
+  /* minmax(0,…) lets cards shrink below their image's intrinsic width, so
+     the grid never forces horizontal overflow in the 320px sidebar */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.asset-card {
+  margin: 0;
+  background: #171a22;
+  border: 1px solid #262a33;
+  border-radius: 6px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.asset-card img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: contain;
+  background: #000;
+  border-radius: 4px;
+}
+
+.gen-preview {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: contain;
+  background: #000;
+  border: 1px solid #262a33;
+  border-radius: 6px;
+  flex: none;
+}
+
+.asset-card figcaption {
+  font-size: 10px;
+  color: #8b93a5;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ramp-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ramp-preview {
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid #303645;
+}
+
+.layer-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0;
+}
+
+.layer-panel-head h2 {
+  margin: 0;
+}
+
+.layer-list li {
+  cursor: pointer;
+}
+
+.layer-list li.selected {
+  border-color: #4a5aa8;
+  background: #1e2436;
+}
+
+.row-actions {
+  display: none;
+  margin-left: auto;
+  gap: 2px;
+  flex: none;
+}
+
+.layer-list li:hover .row-actions,
+.layer-list li.selected .row-actions {
+  display: flex;
+}
+
+.row-actions button {
+  padding: 1px 4px;
+  font-size: 10px;
+}
+
+.row-actions button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+/* inspector — its own scroll-contained panel well, raised groups inside */
+.inspector {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #101218;
+  border: 1px solid #262a33;
+  border-radius: 8px;
+  padding: 0 10px 10px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* sticky panel header so it reads as a distinct block while the body scrolls */
+.inspector-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: 0 -10px 2px;
+  padding: 8px 10px;
+  background: #101218;
+  border-bottom: 1px solid #22262f;
+  border-radius: 8px 8px 0 0;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #8b93a5;
+}
+
+.group {
+  background: #171a22;
+  border: 1px solid #262a33;
+  border-radius: 6px;
+}
+
+.group summary {
+  cursor: pointer;
+  padding: 6px 10px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #8b93a5;
+  user-select: none;
+}
+
+.group-body {
+  padding: 4px 10px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.field-row label {
+  flex: none;
+  width: 72px;
+  color: #8b93a5;
+}
+
+.field-row input[type='range'] {
+  flex: 1;
+  min-width: 0;
+  accent-color: #4a5aa8;
+}
+
+.field-row input.num {
+  width: 64px;
+  flex: none;
+}
+
+.field-row input.text,
+.field-row select {
+  flex: 1;
+  min-width: 0;
+}
+
+.field-row input.num,
+.field-row input.text,
+.field-row select {
+  background: #1d212b;
+  color: #e6e9f0;
+  border: 1px solid #303645;
+  border-radius: 5px;
+  padding: 4px 6px;
+  font-size: 12px;
+}
+
+.field-row input[type='color'] {
+  flex: 1;
+  min-width: 0;
+  height: 26px;
+  padding: 0 2px;
+  background: #1d212b;
+  border: 1px solid #303645;
+  border-radius: 5px;
+}
+
+.field-row input[type='checkbox'] {
+  accent-color: #4a5aa8;
+}
+
+.dice {
+  flex: none;
+  background: #1d212b;
+  border: 1px solid #303645;
+  border-radius: 5px;
+  padding: 2px 6px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.dice:hover {
+  background: #262c38;
+}
+
+.layer-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.badge {
+  flex: none;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.badge-noise { background: #3a2a4d; color: #c9a6f2; }
+.badge-points { background: #23394d; color: #8ec9ff; }
+.badge-billboards { background: #4d3a23; color: #ffcf8e; }
+
+.phase {
+  margin-left: auto;
+  font-size: 10px;
+  color: #8b93a5;
+}
+
+.warnings {
+  font-size: 11px;
+  color: #e0a35c;
+  margin: 0;
+}
+
+.hint {
+  margin-top: auto;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #626a7d;
+}
+
+.viewport {
+  flex: 1;
+  position: relative;
+  min-width: 0;
+}
+
+.viewport canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* lock toggle in layer rows: dim when unlocked, amber when locked */
+.row-actions button.lock-on {
+  color: #d9a441;
+  border-color: #6a5320;
+}
+
+/* ------------------------------------------------------------- Script tab */
+.script-tab {
+  flex: 1;
+  min-height: 0;
+}
+
+/* editor = line-number gutter + textarea sharing one bordered frame */
+.script-editor {
+  flex: 1;
+  min-height: 240px;
+  display: flex;
+  border: 1px solid #303645;
+  border-radius: 6px;
+  background: #0d1017;
+  overflow: hidden;
+}
+
+.script-editor.invalid {
+  border-color: #d0555f;
+  box-shadow: 0 0 0 1px #d0555f66;
+}
+
+.script-gutter,
+.script-text {
+  margin: 0;
+  padding: 8px 6px;
+  font-family: ui-monospace, "Cascadia Code", "Consolas", monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  tab-size: 2;
+  border: 0;
+  background: transparent;
+}
+
+.script-gutter {
+  flex: none;
+  text-align: right;
+  color: #4a5163;
+  user-select: none;
+  overflow: hidden;
+  white-space: pre;
+  min-width: 2.4em;
+  border-right: 1px solid #262a33;
+}
+
+.script-text {
+  flex: 1;
+  min-width: 0;
+  color: #cdd3e0;
+  resize: none;
+  outline: none;
+  white-space: pre;
+  overflow: auto;
+}
+
+.script-error {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #f0868f;
+  font-family: ui-monospace, "Cascadia Code", "Consolas", monospace;
+  word-break: break-word;
+}

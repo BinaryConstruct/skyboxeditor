@@ -1,0 +1,114 @@
+{
+  "version": 2,
+  "layers": [
+    {
+      "type": "noise",
+      "name": "Teal Wisps",
+      "seed": 3,
+      "noiseType": "fbm",
+      "octaves": 5,
+      "scale": 1.6,
+      "warpStrength": 1.2,
+      "powerAmount": 3.2,
+      "innerColor": {
+        "r": 0.08,
+        "g": 0.28,
+        "b": 0.3,
+        "a": 1
+      },
+      "outerColor": {
+        "r": 0.01,
+        "g": 0.02,
+        "b": 0.05,
+        "a": 1
+      },
+      "previewTextureSize": 512
+    },
+    {
+      "type": "points",
+      "name": "Field Stars",
+      "seed": 8,
+      "numPoints": 35000,
+      "pointSize": 1,
+      "pointSizeMax": 3,
+      "colorMode": "blackbody",
+      "tempMin": 2800,
+      "tempMax": 14000,
+      "magnitudePower": 2.6
+    },
+    {
+      "type": "billboards",
+      "name": "Blue Flares",
+      "seed": 5,
+      "numBillboards": 14,
+      "minSize": 0.01,
+      "maxSize": 0.028,
+      "texture": "flare-blue-purple2.png"
+    },
+    {
+      "type": "sun",
+      "name": "Primary (K-class)",
+      "seed": 3,
+      "dirLonDeg": -30,
+      "dirLatDeg": 11,
+      "apparentSize": 0.13,
+      "kelvin": 3600,
+      "corona": 0.75,
+      "coronaExtent": 1.5,
+      "prominences": 0.55,
+      "glow": 0.6
+    },
+    {
+      "type": "sun",
+      "name": "Companion (B-class)",
+      "seed": 12,
+      "dirLonDeg": -15,
+      "dirLatDeg": 16,
+      "apparentSize": 0.055,
+      "kelvin": 14000,
+      "corona": 0.5,
+      "coronaExtent": 1.0,
+      "prominences": 0.15,
+      "glow": 0.45
+    },
+    {
+      "type": "planet",
+      "name": "Ringed Giant",
+      "seed": 21,
+      "dirLonDeg": 34,
+      "dirLatDeg": -10,
+      "apparentSize": 0.14,
+      "banding": 0.65,
+      "baseColor": {
+        "r": 0.3,
+        "g": 0.23,
+        "b": 0.15,
+        "a": 1
+      },
+      "secondColor": {
+        "r": 0.78,
+        "g": 0.66,
+        "b": 0.45,
+        "a": 1
+      },
+      "lightAngleDeg": 50,
+      "atmosphereColor": {
+        "r": 1,
+        "g": 0.85,
+        "b": 0.6,
+        "a": 1
+      },
+      "atmosphereWidth": 0.06,
+      "ringAmount": 0.75,
+      "ringInner": 1.5,
+      "ringOuter": 2.4,
+      "ringTiltDeg": 18,
+      "ringColor": {
+        "r": 0.72,
+        "g": 0.62,
+        "b": 0.5,
+        "a": 1
+      }
+    }
+  ]
+}

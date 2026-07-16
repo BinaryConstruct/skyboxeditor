@@ -1,0 +1,120 @@
+{
+  "version": 2,
+  "layers": [
+    {
+      "type": "noise",
+      "name": "Void",
+      "seed": 12,
+      "noiseType": "fbm",
+      "octaves": 4,
+      "scale": 1.2,
+      "powerAmount": 3.4,
+      "innerColor": {
+        "r": 0.02,
+        "g": 0.025,
+        "b": 0.055,
+        "a": 1
+      },
+      "outerColor": {
+        "r": 0,
+        "g": 0,
+        "b": 0.008,
+        "a": 1
+      },
+      "previewTextureSize": 512
+    },
+    {
+      "type": "points",
+      "name": "Faint Foreground Stars",
+      "seed": 27,
+      "numPoints": 3500,
+      "pointSize": 1,
+      "pointSizeMax": 3,
+      "colorMode": "blackbody",
+      "tempMin": 3000,
+      "tempMax": 12000,
+      "magnitudePower": 3
+    },
+    {
+      "type": "billboards",
+      "name": "Distant Galaxies (redshifted)",
+      "seed": 42,
+      "numBillboards": 600,
+      "minSize": 0.006,
+      "maxSize": 0.045,
+      "texture": "proc:galaxy-smudge",
+      "randomRotation": true,
+      "aspectJitter": 0.65,
+      "nearColor": {
+        "r": 0.85,
+        "g": 0.9,
+        "b": 1,
+        "a": 0.95
+      },
+      "farColor": {
+        "r": 0.8,
+        "g": 0.28,
+        "b": 0.15,
+        "a": 0.5
+      },
+      "hdrMultiplier": 2.4,
+      "textureMix": [
+        "proc:galaxy-smudge",
+        "proc:galaxy-spiral",
+        "proc:galaxy-elliptical",
+        "proc:galaxy-edgeon"
+      ]
+    },
+    {
+      "type": "billboards",
+      "name": "Near Field Galaxies",
+      "seed": 91,
+      "numBillboards": 22,
+      "minSize": 0.035,
+      "maxSize": 0.09,
+      "texture": "proc:galaxy-smudge",
+      "randomRotation": true,
+      "aspectJitter": 0.7,
+      "nearColor": {
+        "r": 0.98,
+        "g": 0.95,
+        "b": 0.88,
+        "a": 0.95
+      },
+      "farColor": {
+        "r": 0.85,
+        "g": 0.55,
+        "b": 0.35,
+        "a": 0.65
+      },
+      "hdrMultiplier": 2.4,
+      "textureMix": [
+        "proc:galaxy-spiral",
+        "proc:galaxy-edgeon",
+        "proc:galaxy-elliptical"
+      ]
+    },
+    {
+      "type": "billboards",
+      "name": "Globular Clusters",
+      "seed": 133,
+      "numBillboards": 9,
+      "minSize": 0.02,
+      "maxSize": 0.045,
+      "texture": "proc:galaxy-globular",
+      "hdrMultiplier": 2.0,
+      "nearColor": {
+        "r": 0.95,
+        "g": 0.93,
+        "b": 0.85,
+        "a": 1
+      },
+      "farColor": {
+        "r": 0.85,
+        "g": 0.78,
+        "b": 0.65,
+        "a": 1
+      }
+    }
+  ]
+}

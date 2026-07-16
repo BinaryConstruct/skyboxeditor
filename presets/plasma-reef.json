@@ -1,0 +1,56 @@
+{
+  "version": 2,
+  "layers": [
+    {
+      "type": "points",
+      "name": "Field Stars",
+      "seed": 41,
+      "numPoints": 22000,
+      "pointSize": 1,
+      "pointSizeMax": 3,
+      "colorMode": "blackbody",
+      "tempMin": 2800,
+      "tempMax": 15000,
+      "magnitudePower": 2.4
+    },
+    {
+      "type": "volumetric",
+      "name": "Plasma Reef",
+      "seed": 14,
+      "noiseType": "fbm",
+      "octaves": 6,
+      "scale": 2.4,
+      "warpStrength": 0.8,
+      "warpScale": 1.4,
+      "shelfAmount": 0.45,
+      "density": 3.5,
+      "absorption": 2.8,
+      "innerColor": {
+        "r": 0.25,
+        "g": 0.95,
+        "b": 0.7,
+        "a": 1
+      },
+      "outerColor": {
+        "r": 0.02,
+        "g": 0.08,
+        "b": 0.16,
+        "a": 1
+      },
+      "powerAmount": 1.15
+    },
+    {
+      "type": "sun",
+      "name": "Ion Star",
+      "seed": 19,
+      "dirLonDeg": -38,
+      "dirLatDeg": 22,
+      "apparentSize": 0.06,
+      "kelvin": 21000,
+      "corona": 0.85,
+      "coronaExtent": 1.9,
+      "prominences": 0.1,
+      "glow": 0.6
+    }
+  ]
+}

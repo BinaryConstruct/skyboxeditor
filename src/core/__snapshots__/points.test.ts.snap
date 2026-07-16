@@ -1,0 +1,9 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`generatePoints > first star for seed 0 is stable 1`] = `
+[
+  0.006162113975733519,
+  0.06778967380523682,
+  -0.9976806044578552,
+]
+`;

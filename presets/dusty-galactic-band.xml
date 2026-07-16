@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- v2 showcase preset: domain warp + Hubble ramp + volumetric depth +
+     dust extinction lanes + banded blackbody star field -->
+<spacescapelayers>
+    <layer>
+        <name>Deep Sky Glow</name>
+        <type>noise</type>
+        <seed>11</seed>
+        <noiseType>fbm</noiseType>
+        <octaves>7</octaves>
+        <gain>0.52</gain>
+        <lacunarity>2.1</lacunarity>
+        <scale>1.1</scale>
+        <powerAmount>1.1</powerAmount>
+        <shelfAmount>0</shelfAmount>
+        <ditherAmount>0.02</ditherAmount>
+        <warpStrength>0.7</warpStrength>
+        <warpScale>1.8</warpScale>
+        <colorRamp>0 0 0.01 0.03 1; 0.4 0.03 0.09 0.22 1; 0.65 0.12 0.28 0.5 1; 0.85 0.45 0.55 0.8 1; 1 0.9 0.95 1 1</colorRamp>
+        <innerColor>1 1 1 1</innerColor>
+        <outerColor>0 0 0 1</outerColor>
+        <sourceBlendFactor>one</sourceBlendFactor>
+        <destBlendFactor>one</destBlendFactor>
+        <previewTextureSize>256</previewTextureSize>
+    </layer>
+    <layer>
+        <name>Volumetric Core</name>
+        <type>volumetric</type>
+        <seed>4</seed>
+        <noiseType>fbm</noiseType>
+        <octaves>6</octaves>
+        <gain>0.5</gain>
+        <lacunarity>2</lacunarity>
+        <scale>1.8</scale>
+        <powerAmount>1.6</powerAmount>
+        <shelfAmount>0.35</shelfAmount>
+        <warpStrength>0.8</warpStrength>
+        <warpScale>1.4</warpScale>
+        <steps>56</steps>
+        <density>5</density>
+        <absorption>2.2</absorption>
+        <shellInner>0.45</shellInner>
+        <shellOuter>1.6</shellOuter>
+        <innerColor>0.8 0.7 1 1</innerColor>
+        <outerColor>0.04 0.02 0.1 1</outerColor>
+        <sourceBlendFactor>one</sourceBlendFactor>
+        <destBlendFactor>one_minus_src_alpha</destBlendFactor>
+        <previewTextureSize>256</previewTextureSize>
+    </layer>
+    <layer>
+        <name>Faint Banded Stars</name>
+        <type>points</type>
+        <seed>21</seed>
+        <numPoints>42000</numPoints>
+        <pointSize>1</pointSize>
+        <pointSizeMax>2</pointSizeMax>
+        <colorMode>blackbody</colorMode>
+        <tempMin>2800</tempMin>
+        <tempMax>11000</tempMax>
+        <magnitudePower>2.6</magnitudePower>
+        <bandStrength>0.85</bandStrength>
+        <bandConcentration>3.2</bandConcentration>
+        <bandAngleDeg>28</bandAngleDeg>
+        <sourceBlendFactor>one</sourceBlendFactor>
+        <destBlendFactor>one</destBlendFactor>
+    </layer>
+    <layer>
+        <name>Dust Lanes</name>
+        <type>noise</type>
+        <seed>7</seed>
+        <noiseType>ridged</noiseType>
+        <octaves>8</octaves>
+        <gain>0.62</gain>
+        <lacunarity>2.4</lacunarity>
+        <offset>1</offset>
+        <scale>1.6</scale>
+        <powerAmount>1.2</powerAmount>
+        <shelfAmount>0.55</shelfAmount>
+        <ditherAmount>0.015</ditherAmount>
+        <warpStrength>1</warpStrength>
+        <warpScale>2.4</warpScale>
+        <innerColor>0.38 0.34 0.3 1</innerColor>
+        <outerColor>0 0 0 1</outerColor>
+        <sourceBlendFactor>zero</sourceBlendFactor>
+        <destBlendFactor>one_minus_src_colour</destBlendFactor>
+        <previewTextureSize>256</previewTextureSize>
+    </layer>
+    <layer>
+        <name>Bright Foreground Stars</name>
+        <type>points</type>
+        <seed>3</seed>
+        <numPoints>900</numPoints>
+        <pointSize>2</pointSize>
+        <pointSizeMax>4</pointSizeMax>
+        <colorMode>blackbody</colorMode>
+        <tempMin>3200</tempMin>
+        <tempMax>18000</tempMax>
+        <magnitudePower>1.4</magnitudePower>
+        <bandStrength>0.4</bandStrength>
+        <bandConcentration>2</bandConcentration>
+        <bandAngleDeg>28</bandAngleDeg>
+        <sourceBlendFactor>one</sourceBlendFactor>
+        <destBlendFactor>one</destBlendFactor>
+    </layer>
+    <layer>
+        <name>Hero Flares</name>
+        <type>billboards</type>
+        <seed>9</seed>
+        <numBillboards>26</numBillboards>
+        <minSize>0.02</minSize>
+        <maxSize>0.05</maxSize>
+        <texture>flare-white-small1.png</texture>
+        <nearColor>1 0.97 0.9 1</nearColor>
+        <farColor>0.7 0.8 1 1</farColor>
+        <sourceBlendFactor>one</sourceBlendFactor>
+        <destBlendFactor>one</destBlendFactor>
+    </layer>
+</spacescapelayers>

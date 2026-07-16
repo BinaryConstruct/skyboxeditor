@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- v2 showcase: Emerald ramp + heavy domain warp + volumetric veil +
+     JWST procedural flares with hue mix -->
+<spacescapelayers>
+    <layer>
+        <name>Emerald Filaments</name>
+        <type>noise</type>
+        <seed>31</seed>
+        <noiseType>ridged</noiseType>
+        <octaves>9</octaves>
+        <gain>0.55</gain>
+        <lacunarity>2.2</lacunarity>
+        <offset>1</offset>
+        <scale>0.9</scale>
+        <powerAmount>1.6</powerAmount>
+        <shelfAmount>0.15</shelfAmount>
+        <ditherAmount>0.02</ditherAmount>
+        <warpStrength>1.2</warpStrength>
+        <warpScale>1.6</warpScale>
+        <colorRamp>0 0 0.02 0.02 1; 0.45 0.02 0.2 0.14 1; 0.75 0.15 0.55 0.35 1; 1 0.8 1 0.9 1</colorRamp>
+        <innerColor>1 1 1 1</innerColor>
+        <outerColor>0 0 0 1</outerColor>
+        <sourceBlendFactor>one</sourceBlendFactor>
+        <destBlendFactor>one</destBlendFactor>
+        <previewTextureSize>256</previewTextureSize>
+    </layer>
+    <layer>
+        <name>Veil Volume</name>
+        <type>volumetric</type>
+        <seed>17</seed>
+        <noiseType>fbm</noiseType>
+        <octaves>6</octaves>
+        <gain>0.5</gain>
+        <lacunarity>2</lacunarity>
+        <scale>2.2</scale>
+        <powerAmount>1.8</powerAmount>
+        <shelfAmount>0.4</shelfAmount>
+        <warpStrength>0.9</warpStrength>
+        <warpScale>1.2</warpScale>
+        <steps>56</steps>
+        <density>4.5</density>
+        <absorption>2.5</absorption>
+        <shellInner>0.4</shellInner>
+        <shellOuter>1.5</shellOuter>
+        <innerColor>0.55 0.95 0.75 1</innerColor>
+        <outerColor>0.02 0.08 0.06 1</outerColor>
+        <sourceBlendFactor>one</sourceBlendFactor>
+        <destBlendFactor>one_minus_src_alpha</destBlendFactor>
+        <previewTextureSize>256</previewTextureSize>
+    </layer>
+    <layer>
+        <name>Deep Field Stars</name>
+        <type>points</type>
+        <seed>8</seed>
+        <numPoints>36000</numPoints>
+        <pointSize>1</pointSize>
+        <pointSizeMax>2</pointSizeMax>
+        <colorMode>blackbody</colorMode>
+        <tempMin>3000</tempMin>
+        <tempMax>12000</tempMax>
+        <magnitudePower>2.8</magnitudePower>
+        <sourceBlendFactor>one</sourceBlendFactor>
+        <destBlendFactor>one</destBlendFactor>
+    </layer>
+    <layer>
+        <name>JWST Foreground Stars</name>
+        <type>billboards</type>
+        <seed>12</seed>
+        <numBillboards>40</numBillboards>
+        <minSize>0.02</minSize>
+        <maxSize>0.06</maxSize>
+        <texture>proc:jwst</texture>
+        <huePalette>3 1 0.96 0.85 1; 2 0.65 0.78 1 1; 1 0.85 0.65 1 1; 1 1 0.55 0.45 1</huePalette>
+        <nearColor>1 1 1 1</nearColor>
+        <farColor>1 1 1 1</farColor>
+        <sourceBlendFactor>one</sourceBlendFactor>
+        <destBlendFactor>one</destBlendFactor>
+    </layer>
+</spacescapelayers>

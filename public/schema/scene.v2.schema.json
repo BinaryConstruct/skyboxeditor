@@ -1,0 +1,1588 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://skyboxeditor.com/schema/scene.v2.schema.json",
+  "title": "BinaryConstruct Skybox scene (v2)",
+  "description": "Layer stack composited bottom-to-top onto the sky. Same-seed documents render identically (deterministic generation).",
+  "type": "object",
+  "properties": {
+    "version": {
+      "const": 2
+    },
+    "layers": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "type": "object",
+            "description": "\"noise\" layer — omitted fields take their defaults",
+            "properties": {
+              "type": {
+                "const": "noise"
+              },
+              "name": {
+                "type": "string"
+              },
+              "seed": {
+                "type": "integer",
+                "default": 0
+              },
+              "sourceBlendFactor": {
+                "type": "string",
+                "enum": [
+                  "one",
+                  "zero",
+                  "dest_colour",
+                  "src_colour",
+                  "one_minus_dest_colour",
+                  "one_minus_src_colour",
+                  "dest_alpha",
+                  "src_alpha",
+                  "one_minus_dest_alpha",
+                  "one_minus_src_alpha"
+                ],
+                "default": "one"
+              },
+              "destBlendFactor": {
+                "type": "string",
+                "enum": [
+                  "one",
+                  "zero",
+                  "dest_colour",
+                  "src_colour",
+                  "one_minus_dest_colour",
+                  "one_minus_src_colour",
+                  "dest_alpha",
+                  "src_alpha",
+                  "one_minus_dest_alpha",
+                  "one_minus_src_alpha"
+                ],
+                "default": "one"
+              },
+              "noiseType": {
+                "type": "string",
+                "enum": [
+                  "fbm",
+                  "ridged"
+                ],
+                "default": "fbm"
+              },
+              "octaves": {
+                "type": "integer",
+                "default": 2
+              },
+              "gain": {
+                "type": "number",
+                "default": 0.5
+              },
+              "lacunarity": {
+                "type": "number",
+                "default": 2
+              },
+              "offset": {
+                "type": "number",
+                "default": 1
+              },
+              "scale": {
+                "type": "number",
+                "default": 1
+              },
+              "powerAmount": {
+                "type": "number",
+                "default": 1
+              },
+              "shelfAmount": {
+                "type": "number",
+                "default": 0
+              },
+              "ditherAmount": {
+                "type": "number",
+                "default": 0.03
+              },
+              "innerColor": {
+                "type": "object",
+                "properties": {
+                  "r": {
+                    "type": "number"
+                  },
+                  "g": {
+                    "type": "number"
+                  },
+                  "b": {
+                    "type": "number"
+                  },
+                  "a": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "r",
+                  "g",
+                  "b"
+                ],
+                "default": {
+                  "r": 0.78,
+                  "g": 0.7,
+                  "b": 0.58,
+                  "a": 1
+                }
+              },
+              "outerColor": {
+                "type": "object",
+                "properties": {
+                  "r": {
+                    "type": "number"
+                  },
+                  "g": {
+                    "type": "number"
+                  },
+                  "b": {
+                    "type": "number"
+                  },
+                  "a": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "r",
+                  "g",
+                  "b"
+                ],
+                "default": {
+                  "r": 0.78,
+                  "g": 0.7,
+                  "b": 0.58,
+                  "a": 1
+                }
+              },
+              "previewTextureSize": {
+                "type": "integer",
+                "default": 256
+              },
+              "warpStrength": {
+                "type": "number",
+                "default": 0
+              },
+              "warpScale": {
+                "type": "number",
+                "default": 1
+              },
+              "hdrPower": {
+                "type": "number"
+              },
+              "hdrMultiplier": {
+                "type": "number"
+              },
+              "colorRamp": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "t": {
+                      "type": "number"
+                    },
+                    "color": {
+                      "type": "object",
+                      "properties": {
+                        "r": {
+                          "type": "number"
+                        },
+                        "g": {
+                          "type": "number"
+                        },
+                        "b": {
+                          "type": "number"
+                        },
+                        "a": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "r",
+                        "g",
+                        "b"
+                      ],
+                      "default": {
+                        "r": 0.78,
+                        "g": 0.7,
+                        "b": 0.58,
+                        "a": 1
+                      }
+                    }
+                  },
+                  "required": [
+                    "t",
+                    "color"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          {
+            "type": "object",
+            "description": "\"points\" layer — omitted fields take their defaults",
+            "properties": {
+              "type": {
+                "const": "points"
+              },
+              "name": {
+                "type": "string"
+              },
+              "seed": {
+                "type": "integer",
+                "default": 0
+              },
+              "sourceBlendFactor": {
+                "type": "string",
+                "enum": [
+                  "one",
+                  "zero",
+                  "dest_colour",
+                  "src_colour",
+                  "one_minus_dest_colour",
+                  "one_minus_src_colour",
+                  "dest_alpha",
+                  "src_alpha",
+                  "one_minus_dest_alpha",
+                  "one_minus_src_alpha"
+                ],
+                "default": "one"
+              },
+              "destBlendFactor": {
+                "type": "string",
+                "enum": [
+                  "one",
+                  "zero",
+                  "dest_colour",
+                  "src_colour",
+                  "one_minus_dest_colour",
+                  "one_minus_src_colour",
+                  "dest_alpha",
+                  "src_alpha",
+                  "one_minus_dest_alpha",
+                  "one_minus_src_alpha"
+                ],
+                "default": "one"
+              },
+              "maskEnabled": {
+                "type": "boolean",
+                "default": false
+              },
+              "maskNoiseType": {
+                "type": "string",
+                "enum": [
+                  "fbm",
+                  "ridged"
+                ],
+                "default": "fbm"
+              },
+              "maskSeed": {
+                "type": "integer",
+                "default": 1
+              },
+              "maskOctaves": {
+                "type": "integer",
+                "default": 1
+              },
+              "maskGain": {
+                "type": "number",
+                "default": 0.5
+              },
+              "maskLacunarity": {
+                "type": "number",
+                "default": 2
+              },
+              "maskOffset": {
+                "type": "number",
+                "default": 1
+              },
+              "maskPower": {
+                "type": "number",
+                "default": 1
+              },
+              "maskScale": {
+                "type": "number",
+                "default": 1
+              },
+              "maskThreshold": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "default": 0
+              },
+              "maskWarpStrength": {
+                "type": "number",
+                "default": 0
+              },
+              "maskWarpScale": {
+                "type": "number",
+                "default": 1
+              },
+              "numPoints": {
+                "type": "integer",
+                "default": 1000
+              },
+              "pointSize": {
+                "type": "integer",
+                "default": 1
+              },
+              "pointSizeMax": {
+                "type": "integer",
+                "default": 0
+              },
+              "nearColor": {
+                "type": "object",
+                "properties": {
+                  "r": {
+                    "type": "number"
+                  },
+                  "g": {
+                    "type": "number"
+                  },
+                  "b": {
+                    "type": "number"
+                  },
+                  "a": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "r",
+                  "g",
+                  "b"
+                ],
+                "default": {
+                  "r": 0.78,
+                  "g": 0.7,
+                  "b": 0.58,
+                  "a": 1
+                }
+              },
+              "farColor": {
+                "type": "object",
+                "properties": {
+                  "r": {
+                    "type": "number"
+                  },
+                  "g": {
+                    "type": "number"
+                  },
+                  "b": {
+                    "type": "number"
+                  },
+                  "a": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "r",
+                  "g",
+                  "b"
+                ],
+                "default": {
+                  "r": 0.78,
+                  "g": 0.7,
+                  "b": 0.58,
+                  "a": 1
+                }
+              },
+              "colorMode": {
+                "type": "string",
+                "default": "legacy"
+              },
+              "tempMin": {
+                "type": "number",
+                "default": 2500
+              },
+              "tempMax": {
+                "type": "number",
+                "default": 12000
+              },
+              "magnitudePower": {
+                "type": "number",
+                "default": 1
+              },
+              "bandStrength": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "default": 0
+              },
+              "bandConcentration": {
+                "type": "number",
+                "default": 2
+              },
+              "bandAngleDeg": {
+                "type": "number",
+                "default": 0
+              },
+              "hdrPower": {
+                "type": "number"
+              },
+              "hdrMultiplier": {
+                "type": "number"
+              },
+              "dataFile": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          {
+            "type": "object",
+            "description": "\"billboards\" layer — omitted fields take their defaults",
+            "properties": {
+              "type": {
+                "const": "billboards"
+              },
+              "name": {
+                "type": "string"
+              },
+              "seed": {
+                "type": "integer",
+                "default": 0
+              },
+              "sourceBlendFactor": {
+                "type": "string",
+                "enum": [
+                  "one",
+                  "zero",
+                  "dest_colour",
+                  "src_colour",
+                  "one_minus_dest_colour",
+                  "one_minus_src_colour",
+                  "dest_alpha",
+                  "src_alpha",
+                  "one_minus_dest_alpha",
+                  "one_minus_src_alpha"
+                ],
+                "default": "one"
+              },
+              "destBlendFactor": {
+                "type": "string",
+                "enum": [
+                  "one",
+                  "zero",
+                  "dest_colour",
+                  "src_colour",
+                  "one_minus_dest_colour",
+                  "one_minus_src_colour",
+                  "dest_alpha",
+                  "src_alpha",
+                  "one_minus_dest_alpha",
+                  "one_minus_src_alpha"
+                ],
+                "default": "one"
+              },
+              "maskEnabled": {
+                "type": "boolean",
+                "default": false
+              },
+              "maskNoiseType": {
+                "type": "string",
+                "enum": [
+                  "fbm",
+                  "ridged"
+                ],
+                "default": "fbm"
+              },
+              "maskSeed": {
+                "type": "integer",
+                "default": 1
+              },
+              "maskOctaves": {
+                "type": "integer",
+                "default": 1
+              },
+              "maskGain": {
+                "type": "number",
+                "default": 0.5
+              },
+              "maskLacunarity": {
+                "type": "number",
+                "default": 2
+              },
+              "maskOffset": {
+                "type": "number",
+                "default": 1
+              },
+              "maskPower": {
+                "type": "number",
+                "default": 1
+              },
+              "maskScale": {
+                "type": "number",
+                "default": 1
+              },
+              "maskThreshold": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "default": 0
+              },
+              "maskWarpStrength": {
+                "type": "number",
+                "default": 0
+              },
+              "maskWarpScale": {
+                "type": "number",
+                "default": 1
+              },
+              "numBillboards": {
+                "type": "integer",
+                "default": 100
+              },
+              "minSize": {
+                "type": "number",
+                "default": 0.05
+              },
+              "maxSize": {
+                "type": "number",
+                "default": 0.01
+              },
+              "texture": {
+                "type": "string",
+                "default": ""
+              },
+              "nearColor": {
+                "type": "object",
+                "properties": {
+                  "r": {
+                    "type": "number"
+                  },
+                  "g": {
+                    "type": "number"
+                  },
+                  "b": {
+                    "type": "number"
+                  },
+                  "a": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "r",
+                  "g",
+                  "b"
+                ],
+                "default": {
+                  "r": 0.78,
+                  "g": 0.7,
+                  "b": 0.58,
+                  "a": 1
+                }
+              },
+              "farColor": {
+                "type": "object",
+                "properties": {
+                  "r": {
+                    "type": "number"
+                  },
+                  "g": {
+                    "type": "number"
+                  },
+                  "b": {
+                    "type": "number"
+                  },
+                  "a": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "r",
+                  "g",
+                  "b"
+                ],
+                "default": {
+                  "r": 0.78,
+                  "g": 0.7,
+                  "b": 0.58,
+                  "a": 1
+                }
+              },
+              "randomRotation": {
+                "type": "boolean",
+                "default": false
+              },
+              "aspectJitter": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "default": 0
+              },
+              "hdrPower": {
+                "type": "number"
+              },
+              "hdrMultiplier": {
+                "type": "number"
+              },
+              "dataFile": {
+                "type": "string"
+              },
+              "huePalette": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "t": {
+                      "type": "number"
+                    },
+                    "color": {
+                      "type": "object",
+                      "properties": {
+                        "r": {
+                          "type": "number"
+                        },
+                        "g": {
+                          "type": "number"
+                        },
+                        "b": {
+                          "type": "number"
+                        },
+                        "a": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "r",
+                        "g",
+                        "b"
+                      ],
+                      "default": {
+                        "r": 0.78,
+                        "g": 0.7,
+                        "b": 0.58,
+                        "a": 1
+                      }
+                    }
+                  },
+                  "required": [
+                    "t",
+                    "color"
+                  ]
+                }
+              },
+              "textureMix": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          {
+            "type": "object",
+            "description": "\"volumetric\" layer — omitted fields take their defaults",
+            "properties": {
+              "type": {
+                "const": "volumetric"
+              },
+              "name": {
+                "type": "string"
+              },
+              "seed": {
+                "type": "integer",
+                "default": 0
+              },
+              "sourceBlendFactor": {
+                "type": "string",
+                "enum": [
+                  "one",
+                  "zero",
+                  "dest_colour",
+                  "src_colour",
+                  "one_minus_dest_colour",
+                  "one_minus_src_colour",
+                  "dest_alpha",
+                  "src_alpha",
+                  "one_minus_dest_alpha",
+                  "one_minus_src_alpha"
+                ],
+                "default": "one"
+              },
+              "destBlendFactor": {
+                "type": "string",
+                "enum": [
+                  "one",
+                  "zero",
+                  "dest_colour",
+                  "src_colour",
+                  "one_minus_dest_colour",
+                  "one_minus_src_colour",
+                  "dest_alpha",
+                  "src_alpha",
+                  "one_minus_dest_alpha",
+                  "one_minus_src_alpha"
+                ],
+                "default": "one_minus_src_alpha"
+              },
+              "noiseType": {
+                "type": "string",
+                "enum": [
+                  "fbm",
+                  "ridged"
+                ],
+                "default": "fbm"
+              },
+              "octaves": {
+                "type": "integer",
+                "default": 6
+              },
+              "gain": {
+                "type": "number",
+                "default": 0.5
+              },
+              "lacunarity": {
+                "type": "number",
+                "default": 2
+              },
+              "offset": {
+                "type": "number",
+                "default": 1
+              },
+              "scale": {
+                "type": "number",
+                "default": 1.5
+              },
+              "powerAmount": {
+                "type": "number",
+                "default": 1
+              },
+              "shelfAmount": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "default": 0.25
+              },
+              "warpStrength": {
+                "type": "number",
+                "default": 0.5
+              },
+              "warpScale": {
+                "type": "number",
+                "default": 1.5
+              },
+              "innerColor": {
+                "type": "object",
+                "properties": {
+                  "r": {
+                    "type": "number"
+                  },
+                  "g": {
+                    "type": "number"
+                  },
+                  "b": {
+                    "type": "number"
+                  },
+                  "a": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "r",
+                  "g",
+                  "b"
+                ],
+                "default": {
+                  "r": 0.78,
+                  "g": 0.7,
+                  "b": 0.58,
+                  "a": 1
+                }
+              },
+              "outerColor": {
+                "type": "object",
+                "properties": {
+                  "r": {
+                    "type": "number"
+                  },
+                  "g": {
+                    "type": "number"
+                  },
+                  "b": {
+                    "type": "number"
+                  },
+                  "a": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "r",
+                  "g",
+                  "b"
+                ],
+                "default": {
+                  "r": 0.78,
+                  "g": 0.7,
+                  "b": 0.58,
+                  "a": 1
+                }
+              },
+              "steps": {
+                "type": "integer",
+                "default": 48
+              },
+              "density": {
+                "type": "number",
+                "default": 4
+              },
+              "absorption": {
+                "type": "number",
+                "default": 2
+              },
+              "shellInner": {
+                "type": "number",
+                "default": 0.5
+              },
+              "shellOuter": {
+                "type": "number",
+                "default": 1.5
+              },
+              "previewTextureSize": {
+                "type": "integer",
+                "default": 256
+              },
+              "hdrPower": {
+                "type": "number"
+              },
+              "hdrMultiplier": {
+                "type": "number"
+              },
+              "colorRamp": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "t": {
+                      "type": "number"
+                    },
+                    "color": {
+                      "type": "object",
+                      "properties": {
+                        "r": {
+                          "type": "number"
+                        },
+                        "g": {
+                          "type": "number"
+                        },
+                        "b": {
+                          "type": "number"
+                        },
+                        "a": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "r",
+                        "g",
+                        "b"
+                      ],
+                      "default": {
+                        "r": 0.78,
+                        "g": 0.7,
+                        "b": 0.58,
+                        "a": 1
+                      }
+                    }
+                  },
+                  "required": [
+                    "t",
+                    "color"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          {
+            "type": "object",
+            "description": "\"galaxy\" layer — omitted fields take their defaults",
+            "properties": {
+              "type": {
+                "const": "galaxy"
+              },
+              "name": {
+                "type": "string"
+              },
+              "seed": {
+                "type": "integer",
+                "default": 1
+              },
+              "sourceBlendFactor": {
+                "type": "string",
+                "enum": [
+                  "one",
+                  "zero",
+                  "dest_colour",
+                  "src_colour",
+                  "one_minus_dest_colour",
+                  "one_minus_src_colour",
+                  "dest_alpha",
+                  "src_alpha",
+                  "one_minus_dest_alpha",
+                  "one_minus_src_alpha"
+                ],
+                "default": "one"
+              },
+              "destBlendFactor": {
+                "type": "string",
+                "enum": [
+                  "one",
+                  "zero",
+                  "dest_colour",
+                  "src_colour",
+                  "one_minus_dest_colour",
+                  "one_minus_src_colour",
+                  "dest_alpha",
+                  "src_alpha",
+                  "one_minus_dest_alpha",
+                  "one_minus_src_alpha"
+                ],
+                "default": "one"
+              },
+              "dirLonDeg": {
+                "type": "number",
+                "default": 0
+              },
+              "dirLatDeg": {
+                "type": "number",
+                "default": 25
+              },
+              "apparentSize": {
+                "type": "number",
+                "default": 0.45
+              },
+              "tiltDeg": {
+                "type": "number",
+                "default": 55
+              },
+              "spinDeg": {
+                "type": "number",
+                "default": 0
+              },
+              "arms": {
+                "type": "integer",
+                "default": 2
+              },
+              "windings": {
+                "type": "number",
+                "default": 1.2
+              },
+              "spread": {
+                "type": "number",
+                "default": 0.35
+              },
+              "bulgeSize": {
+                "type": "number",
+                "default": 0.25
+              },
+              "bulgeKelvin": {
+                "type": "number",
+                "default": 4200
+              },
+              "armKelvin": {
+                "type": "number",
+                "default": 9500
+              },
+              "numStars": {
+                "type": "integer",
+                "default": 14000
+              },
+              "starSize": {
+                "type": "number",
+                "default": 2
+              },
+              "coreGlow": {
+                "type": "number",
+                "default": 1
+              },
+              "thickness": {
+                "type": "number",
+                "default": 0.07
+              },
+              "dust": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "default": 0.5
+              },
+              "nebulae": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "default": 0.6
+              },
+              "hdrPower": {
+                "type": "number"
+              },
+              "hdrMultiplier": {
+                "type": "number"
+              },
+              "locked": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          {
+            "type": "object",
+            "description": "\"sun\" layer — omitted fields take their defaults",
+            "properties": {
+              "type": {
+                "const": "sun"
+              },
+              "name": {
+                "type": "string"
+              },
+              "seed": {
+                "type": "integer",
+                "default": 3
+              },
+              "sourceBlendFactor": {
+                "type": "string",
+                "enum": [
+                  "one",
+                  "zero",
+                  "dest_colour",
+                  "src_colour",
+                  "one_minus_dest_colour",
+                  "one_minus_src_colour",
+                  "dest_alpha",
+                  "src_alpha",
+                  "one_minus_dest_alpha",
+                  "one_minus_src_alpha"
+                ],
+                "default": "one"
+              },
+              "destBlendFactor": {
+                "type": "string",
+                "enum": [
+                  "one",
+                  "zero",
+                  "dest_colour",
+                  "src_colour",
+                  "one_minus_dest_colour",
+                  "one_minus_src_colour",
+                  "dest_alpha",
+                  "src_alpha",
+                  "one_minus_dest_alpha",
+                  "one_minus_src_alpha"
+                ],
+                "default": "one_minus_src_alpha"
+              },
+              "dirLonDeg": {
+                "type": "number",
+                "default": -40
+              },
+              "dirLatDeg": {
+                "type": "number",
+                "default": 15
+              },
+              "apparentSize": {
+                "type": "number",
+                "default": 0.12
+              },
+              "rotationDeg": {
+                "type": "number",
+                "default": 0
+              },
+              "kelvin": {
+                "type": "number",
+                "default": 5800
+              },
+              "limbDarkening": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "default": 0.6
+              },
+              "granulation": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "default": 0.35
+              },
+              "corona": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "default": 0.7
+              },
+              "coronaExtent": {
+                "type": "number",
+                "default": 1.4
+              },
+              "prominences": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "default": 0.4
+              },
+              "glow": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "default": 0.5
+              },
+              "hdrPower": {
+                "type": "number"
+              },
+              "hdrMultiplier": {
+                "type": "number"
+              },
+              "locked": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          {
+            "type": "object",
+            "description": "\"planet\" layer — omitted fields take their defaults",
+            "properties": {
+              "type": {
+                "const": "planet"
+              },
+              "name": {
+                "type": "string"
+              },
+              "seed": {
+                "type": "integer",
+                "default": 7
+              },
+              "sourceBlendFactor": {
+                "type": "string",
+                "enum": [
+                  "one",
+                  "zero",
+                  "dest_colour",
+                  "src_colour",
+                  "one_minus_dest_colour",
+                  "one_minus_src_colour",
+                  "dest_alpha",
+                  "src_alpha",
+                  "one_minus_dest_alpha",
+                  "one_minus_src_alpha"
+                ],
+                "default": "one"
+              },
+              "destBlendFactor": {
+                "type": "string",
+                "enum": [
+                  "one",
+                  "zero",
+                  "dest_colour",
+                  "src_colour",
+                  "one_minus_dest_colour",
+                  "one_minus_src_colour",
+                  "dest_alpha",
+                  "src_alpha",
+                  "one_minus_dest_alpha",
+                  "one_minus_src_alpha"
+                ],
+                "default": "one_minus_src_alpha"
+              },
+              "dirLonDeg": {
+                "type": "number",
+                "default": 30
+              },
+              "dirLatDeg": {
+                "type": "number",
+                "default": -10
+              },
+              "apparentSize": {
+                "type": "number",
+                "default": 0.1
+              },
+              "rotationDeg": {
+                "type": "number",
+                "default": 0
+              },
+              "baseColor": {
+                "type": "object",
+                "properties": {
+                  "r": {
+                    "type": "number"
+                  },
+                  "g": {
+                    "type": "number"
+                  },
+                  "b": {
+                    "type": "number"
+                  },
+                  "a": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "r",
+                  "g",
+                  "b"
+                ],
+                "default": {
+                  "r": 0.78,
+                  "g": 0.7,
+                  "b": 0.58,
+                  "a": 1
+                }
+              },
+              "secondColor": {
+                "type": "object",
+                "properties": {
+                  "r": {
+                    "type": "number"
+                  },
+                  "g": {
+                    "type": "number"
+                  },
+                  "b": {
+                    "type": "number"
+                  },
+                  "a": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "r",
+                  "g",
+                  "b"
+                ],
+                "default": {
+                  "r": 0.78,
+                  "g": 0.7,
+                  "b": 0.58,
+                  "a": 1
+                }
+              },
+              "noiseScale": {
+                "type": "number",
+                "default": 3
+              },
+              "octaves": {
+                "type": "integer",
+                "default": 5
+              },
+              "banding": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "default": 0
+              },
+              "lightAngleDeg": {
+                "type": "number",
+                "default": 25
+              },
+              "atmosphereColor": {
+                "type": "object",
+                "properties": {
+                  "r": {
+                    "type": "number"
+                  },
+                  "g": {
+                    "type": "number"
+                  },
+                  "b": {
+                    "type": "number"
+                  },
+                  "a": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "r",
+                  "g",
+                  "b"
+                ],
+                "default": {
+                  "r": 0.78,
+                  "g": 0.7,
+                  "b": 0.58,
+                  "a": 1
+                }
+              },
+              "atmosphereWidth": {
+                "type": "number",
+                "default": 0.08
+              },
+              "ringAmount": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "default": 0
+              },
+              "ringInner": {
+                "type": "number",
+                "default": 1.45
+              },
+              "ringOuter": {
+                "type": "number",
+                "default": 2.2
+              },
+              "ringTiltDeg": {
+                "type": "number",
+                "default": 22
+              },
+              "ringColor": {
+                "type": "object",
+                "properties": {
+                  "r": {
+                    "type": "number"
+                  },
+                  "g": {
+                    "type": "number"
+                  },
+                  "b": {
+                    "type": "number"
+                  },
+                  "a": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "r",
+                  "g",
+                  "b"
+                ],
+                "default": {
+                  "r": 0.78,
+                  "g": 0.7,
+                  "b": 0.58,
+                  "a": 1
+                }
+              },
+              "hdrPower": {
+                "type": "number"
+              },
+              "hdrMultiplier": {
+                "type": "number"
+              },
+              "locked": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          {
+            "type": "object",
+            "description": "\"blackhole\" layer — omitted fields take their defaults",
+            "properties": {
+              "type": {
+                "const": "blackhole"
+              },
+              "name": {
+                "type": "string"
+              },
+              "seed": {
+                "type": "integer",
+                "default": 0
+              },
+              "sourceBlendFactor": {
+                "type": "string",
+                "enum": [
+                  "one",
+                  "zero",
+                  "dest_colour",
+                  "src_colour",
+                  "one_minus_dest_colour",
+                  "one_minus_src_colour",
+                  "dest_alpha",
+                  "src_alpha",
+                  "one_minus_dest_alpha",
+                  "one_minus_src_alpha"
+                ],
+                "default": "one"
+              },
+              "destBlendFactor": {
+                "type": "string",
+                "enum": [
+                  "one",
+                  "zero",
+                  "dest_colour",
+                  "src_colour",
+                  "one_minus_dest_colour",
+                  "one_minus_src_colour",
+                  "dest_alpha",
+                  "src_alpha",
+                  "one_minus_dest_alpha",
+                  "one_minus_src_alpha"
+                ],
+                "default": "one"
+              },
+              "dirLonDeg": {
+                "type": "number",
+                "default": 0
+              },
+              "dirLatDeg": {
+                "type": "number",
+                "default": 0
+              },
+              "apparentSize": {
+                "type": "number",
+                "default": 0.05
+              },
+              "lensStrength": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "default": 0.6
+              },
+              "photonRing": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "default": 0.7
+              },
+              "discAmount": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "default": 0.8
+              },
+              "discInner": {
+                "type": "number",
+                "default": 1.7
+              },
+              "discOuter": {
+                "type": "number",
+                "default": 3.6
+              },
+              "discTiltDeg": {
+                "type": "number",
+                "default": 72
+              },
+              "discSpinDeg": {
+                "type": "number",
+                "default": 0
+              },
+              "discKelvin": {
+                "type": "number",
+                "default": 4500
+              },
+              "discDoppler": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "default": 0.5
+              },
+              "hdrPower": {
+                "type": "number"
+              },
+              "hdrMultiplier": {
+                "type": "number"
+              },
+              "locked": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          {
+            "type": "object",
+            "description": "\"sprite\" layer — omitted fields take their defaults",
+            "properties": {
+              "type": {
+                "const": "sprite"
+              },
+              "name": {
+                "type": "string"
+              },
+              "seed": {
+                "type": "integer",
+                "default": 0
+              },
+              "sourceBlendFactor": {
+                "type": "string",
+                "enum": [
+                  "one",
+                  "zero",
+                  "dest_colour",
+                  "src_colour",
+                  "one_minus_dest_colour",
+                  "one_minus_src_colour",
+                  "dest_alpha",
+                  "src_alpha",
+                  "one_minus_dest_alpha",
+                  "one_minus_src_alpha"
+                ],
+                "default": "one"
+              },
+              "destBlendFactor": {
+                "type": "string",
+                "enum": [
+                  "one",
+                  "zero",
+                  "dest_colour",
+                  "src_colour",
+                  "one_minus_dest_colour",
+                  "one_minus_src_colour",
+                  "dest_alpha",
+                  "src_alpha",
+                  "one_minus_dest_alpha",
+                  "one_minus_src_alpha"
+                ],
+                "default": "one"
+              },
+              "texture": {
+                "type": "string",
+                "default": "default.png"
+              },
+              "dirLonDeg": {
+                "type": "number",
+                "default": 0
+              },
+              "dirLatDeg": {
+                "type": "number",
+                "default": 0
+              },
+              "apparentSize": {
+                "type": "number",
+                "default": 0.15
+              },
+              "aspect": {
+                "type": "number",
+                "default": 1
+              },
+              "rotationDeg": {
+                "type": "number",
+                "default": 0
+              },
+              "hdrPower": {
+                "type": "number"
+              },
+              "hdrMultiplier": {
+                "type": "number"
+              },
+              "locked": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "required": [
+    "version",
+    "layers"
+  ]
+}

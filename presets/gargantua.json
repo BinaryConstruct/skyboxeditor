@@ -1,0 +1,74 @@
+{
+  "version": 2,
+  "layers": [
+    {
+      "type": "noise",
+      "name": "Dust Veil",
+      "seed": 9,
+      "noiseType": "fbm",
+      "octaves": 6,
+      "scale": 2.2,
+      "warpStrength": 0.9,
+      "powerAmount": 3.6,
+      "shelfAmount": 0.15,
+      "innerColor": { "r": 0.11, "g": 0.06, "b": 0.04, "a": 1 },
+      "outerColor": { "r": 0.0, "g": 0.0, "b": 0.015, "a": 1 },
+      "previewTextureSize": 512
+    },
+    {
+      "type": "points",
+      "name": "Galactic Band",
+      "seed": 11,
+      "numPoints": 60000,
+      "pointSize": 1,
+      "pointSizeMax": 3,
+      "colorMode": "blackbody",
+      "tempMin": 2600,
+      "tempMax": 12000,
+      "magnitudePower": 3,
+      "bandStrength": 0.75,
+      "bandConcentration": 3.5,
+      "bandAngleDeg": 25
+    },
+    {
+      "type": "points",
+      "name": "Bright Foreground Stars",
+      "seed": 23,
+      "numPoints": 900,
+      "pointSize": 2,
+      "pointSizeMax": 5,
+      "colorMode": "blackbody",
+      "tempMin": 3000,
+      "tempMax": 18000,
+      "magnitudePower": 1.6
+    },
+    {
+      "type": "galaxy",
+      "name": "Distant Companion",
+      "seed": 4,
+      "dirLonDeg": -115,
+      "dirLatDeg": -18,
+      "apparentSize": 0.16,
+      "tiltDeg": 65,
+      "spinDeg": 40,
+      "numStars": 6000,
+      "coreGlow": 0.7
+    },
+    {
+      "type": "blackhole",
+      "name": "Gargantua",
+      "dirLonDeg": 15,
+      "dirLatDeg": 4,
+      "apparentSize": 0.075,
+      "lensStrength": 0.5,
+      "photonRing": 0.75,
+      "discAmount": 0.65,
+      "discInner": 1.6,
+      "discOuter": 3.4,
+      "discTiltDeg": 78,
+      "discSpinDeg": -15,
+      "discKelvin": 4200,
+      "discDoppler": 0.6
+    }
+  ]
+}
