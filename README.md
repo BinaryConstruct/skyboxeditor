@@ -51,24 +51,24 @@ npm run build   # tsc + vite -> dist/
 
 ## Hosting
 
-Deployed on **Cloudflare Pages** (free tier) via its GitHub integration.
-Cloudflare deploys on push to `main`; GitHub Actions runs the CI gate
-(lint/test/build) and a ruleset requires the `verify` check before merge.
+Deployed on **Cloudflare Workers** (free tier, static assets) via Workers
+Builds' GitHub integration. Cloudflare deploys on push to `main`; GitHub
+Actions runs the CI gate (lint/test/build) and a ruleset requires the
+`verify` check before merge.
 
-**Cloudflare Pages project settings** (Settings → Builds & deployments):
+**Workers Builds settings** (Settings → Build):
 
 | Setting | Value |
 | --- | --- |
-| Framework preset | **None** (or *Vite*) |
 | Build command | `npm run build` |
-| Build output directory | `dist` |
+| Deploy command | `npx wrangler deploy` (default) |
 | Root directory | `/` |
 
 Most of this is already carried in the repo, so the dashboard config stays
 minimal:
 
-- **`wrangler.toml`** declares `pages_build_output_dir = "dist"`, so Cloudflare
-  reads the output location from the repo.
+- **`wrangler.toml`** declares an assets-only Worker serving `dist/`
+  (`[assets] directory = "./dist"`, no `main` entry point).
 - **`.node-version`** pins Node `24` for the build image (kept in sync with
   `.github/workflows/ci.yml`).
 - **`public/_headers`** (copied to `dist/_headers`) sets an immutable long cache

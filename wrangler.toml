@@ -1,11 +1,15 @@
-# Cloudflare Pages build configuration.
+# Cloudflare Workers (static assets) configuration.
 #
-# Committing this file lets Cloudflare Pages read the build output location
-# from the repo, so the dashboard only needs the build command + framework
-# preset. `pages_build_output_dir` marks this as a Pages project (not Workers).
-#
-# This is a fully static site (no Pages Functions); `compatibility_date` is
-# still required by wrangler and simply pins the Functions runtime baseline.
+# The repo is connected via Workers Builds, whose deploy step runs
+# `npx wrangler deploy`. This is a fully static site, so the Worker is
+# assets-only: no `main` entry point, just the built `dist/` directory.
+# `public/_headers` (copied into dist/ by Vite) still applies — Workers
+# static assets honor _headers/_redirects the same way Pages did.
 name = "skyboxeditor"
-pages_build_output_dir = "dist"
 compatibility_date = "2025-11-01"
+
+[assets]
+directory = "./dist"
+# the app is a single page (state lives in query params); serve index.html
+# for any stray deep link instead of a bare 404
+not_found_handling = "single-page-application"
