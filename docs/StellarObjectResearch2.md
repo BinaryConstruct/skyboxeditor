@@ -6,7 +6,6 @@
 **Product runtime:** fully client-side TypeScript/Three.js browser editor using WebGL2
 **Primary outputs:** six-face PNG ZIPs, equirectangular PNG/HDR/EXR skyboxes, per-layer images, particle data, preview thumbnails, and serialized presets
 **Audience:** coding agents and graphics programmers
-
 ---
 
 ## Navigation

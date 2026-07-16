@@ -97,12 +97,14 @@ void main() {
 `;
 
 const DISC_VERT = /* glsl */ `
-out vec2 vLocal; // disc-plane coords in horizon-radius units
+out vec2 vLocal;  // disc-plane coords in shadow-radius units
+out vec3 vWorld;  // world position (camera is at the origin)
 
 uniform float horizonWorld;
 
 void main() {
   vLocal = position.xy / horizonWorld;
+  vWorld = (modelMatrix * vec4(position, 1.0)).xyz;
   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 }
 `;
@@ -110,29 +112,80 @@ void main() {
 const DISC_FRAG = /* glsl */ `
 precision highp float;
 
-uniform vec3 hotColor;
-uniform vec3 coolColor;
-uniform float innerR;   // horizon radii
+// Physical disc shading, mirroring the geodesic PCG sprite baker:
+// T ~ r^-0.75 Novikov-Thorne profile via a blackbody LUT, Keplerian Doppler
+// with relativistic beaming, gravitational redshift, and radius-twisted FBM
+// density for differential-rotation streaks. The lens quad captures and
+// bends this disc, so the far-side hat and ring imagery emerge downstream.
+
+uniform sampler2D bbLut;    // blackbody colors, 1000..30000 K
+uniform vec3 discCenter;    // BH center in world space
+uniform vec3 discNormal;    // disc plane normal in world space
+uniform float innerR;       // shadow radii
 uniform float outerR;
 uniform float amount;
 uniform float doppler;
+uniform float kelvin;       // temperature at the inner edge
+uniform float seedOff;      // per-layer streak pattern offset
 
 in vec2 vLocal;
+in vec3 vWorld;
 out vec4 fragColor;
+
+const float B_CRIT = 2.598076211;  // rs per shadow radius (3*sqrt(3)/2)
+
+float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float vnoise(vec2 p) {
+  vec2 i = floor(p); vec2 f = fract(p);
+  vec2 u = f * f * (3.0 - 2.0 * f);
+  return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x),
+             mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
+}
+float fbm(vec2 p) {
+  float a = 0.5; float sum = 0.0;
+  for (int k = 0; k < 4; k++) { sum += a * vnoise(p); p *= 2.02; a *= 0.5; }
+  return sum;
+}
 
 void main() {
   float r = length(vLocal);
   if (r < innerR || r > outerR) discard;
-  float t = (r - innerR) / max(1e-4, outerR - innerR);
-  // hot, bright inner edge falling off outward
-  vec3 col = mix(hotColor, coolColor, t);
-  float bright = amount * (0.18 + 0.85 * pow(1.0 - t, 2.2));
-  // approaching-side beaming: brighten one half along the disc's x axis
-  float azimuth = atan(vLocal.y, vLocal.x);
-  bright *= 1.0 + doppler * 0.9 * sin(azimuth);
-  // soft edges
-  bright *= smoothstep(innerR, innerR * 1.12, r) * (1.0 - smoothstep(outerR * 0.8, outerR, r));
-  fragColor = vec4(col * bright, 1.0);
+  float rs = r * B_CRIT; // radius in Schwarzschild radii
+
+  float env = smoothstep(innerR, innerR * 1.1, r)
+    * (1.0 - smoothstep(outerR * 0.82, outerR, r));
+
+  // Keplerian Doppler: material orbits prograde around the disc normal;
+  // the camera sits at the world origin
+  vec3 rel = vWorld - discCenter;
+  vec3 orb = normalize(cross(discNormal, rel));
+  vec3 toCam = -normalize(vWorld);
+  float vK = min(0.6, sqrt(0.5 / max(rs - 1.0, 1.0)));
+  float mu = dot(orb, toCam);
+  float gam = inversesqrt(1.0 - vK * vK);
+  float delta = 1.0 / (gam * (1.0 - vK * mu));
+  float dE = 1.0 + (delta - 1.0) * doppler;
+
+  // gravitational redshift + temperature profile -> blackbody color
+  float g = sqrt(max(0.05, 1.0 - 1.0 / rs));
+  float T = kelvin * pow(innerR / r, 0.75);
+  float Tobs = clamp(T * dE * g, 1000.0, 30000.0);
+  vec3 col = texture(bbLut, vec2((Tobs - 1000.0) / 29000.0, 0.5)).rgb;
+
+  // radius-twisted streaks (differential rotation)
+  float ang = atan(vLocal.y, vLocal.x) + 2.6 * (r - innerR) / (outerR - innerR);
+  float kr = 1.4 + rs * 0.16;
+  float fb = fbm(vec2(cos(ang), sin(ang)) * kr + seedOff);
+  float density = 0.35 + 0.85 * pow(fb, 1.7);
+
+  // gentler radial falloff than the sprite baker: at layer scale the broad
+  // disc is the readable feature, and the lens compresses it further
+  float I = amount * env * density * pow(innerR / r, 1.4)
+    * dE * dE * dE * g * g * 3.2;
+  vec3 c = col * I;
+  // soft shoulder (same as the sprite baker) so hot regions keep their hue
+  c = c * 1.55 / (1.0 + c);
+  fragColor = vec4(c, 1.0);
 }
 `;
 
@@ -142,6 +195,26 @@ void main() {
 // built lazily once per session (pure math, deterministic).
 const LUT_X_MAX = 9;
 let lutTexture: THREE.DataTexture | null = null;
+
+// Blackbody color LUT (1000..30000 K) from the same kelvinToRgb the rest of
+// the app uses, so disc hues match star/sprite hues exactly.
+let bbTexture: THREE.DataTexture | null = null;
+function getBlackbodyLutTexture(): THREE.DataTexture {
+  if (!bbTexture) {
+    const n = 256;
+    const data = new Float32Array(n * 4);
+    for (let i = 0; i < n; i++) {
+      const rgb = kelvinToRgb(1000 + (29000 * i) / (n - 1));
+      data[i * 4] = rgb.r; data[i * 4 + 1] = rgb.g; data[i * 4 + 2] = rgb.b;
+      data[i * 4 + 3] = 1;
+    }
+    bbTexture = new THREE.DataTexture(data, n, 1, THREE.RGBAFormat, THREE.FloatType);
+    bbTexture.minFilter = THREE.LinearFilter;
+    bbTexture.magFilter = THREE.LinearFilter;
+    bbTexture.needsUpdate = true;
+  }
+  return bbTexture;
+}
 function getDeflectionLutTexture(): THREE.DataTexture {
   if (!lutTexture) {
     const lut = buildDeflectionLut(256, LUT_X_MAX);
@@ -206,20 +279,21 @@ export function buildBlackHoleObject(
   if (layer.discAmount > 0) {
     const discWorld = layer.discOuter * horizonWorld;
     discGeo = new THREE.PlaneGeometry(discWorld * 2.1, discWorld * 2.1);
-    const hot = kelvinToRgb(layer.discKelvin);
-    const cool = kelvinToRgb(Math.max(1200, layer.discKelvin * 0.4));
     discMat = new THREE.ShaderMaterial({
       glslVersion: THREE.GLSL3,
       vertexShader: DISC_VERT,
       fragmentShader: DISC_FRAG,
       uniforms: {
         horizonWorld: { value: horizonWorld },
-        hotColor: { value: new THREE.Vector3(hot.r, hot.g, hot.b) },
-        coolColor: { value: new THREE.Vector3(cool.r, cool.g, cool.b) },
+        bbLut: { value: getBlackbodyLutTexture() },
+        discCenter: { value: new THREE.Vector3() }, // synced below + on place
+        discNormal: { value: new THREE.Vector3(0, 0, 1) },
         innerR: { value: layer.discInner },
         outerR: { value: layer.discOuter },
         amount: { value: layer.discAmount },
         doppler: { value: layer.discDoppler },
+        kelvin: { value: layer.discKelvin },
+        seedOff: { value: (layer.seed >>> 0) % 977 },
       },
       depthTest: false,
       depthWrite: false,
@@ -237,6 +311,17 @@ export function buildBlackHoleObject(
     discMesh.frustumCulled = false;
     group.add(discMesh);
   }
+
+  // the disc shader needs the plane's world center + normal for the Doppler
+  // geometry; recompute after every (re)orientation
+  const syncDiscFrame = (): void => {
+    if (!discMesh || !discMat) return;
+    discMesh.updateMatrixWorld();
+    (discMat.uniforms.discCenter.value as THREE.Vector3).copy(discMesh.position);
+    (discMat.uniforms.discNormal.value as THREE.Vector3)
+      .set(0, 0, 1).applyQuaternion(discMesh.quaternion).normalize();
+  };
+  syncDiscFrame();
 
   // lens quad: covers the lens footprint, replaces background inside it
   const quadHalf = Math.tan(coverage) * skyRadius * 0.97;
@@ -301,6 +386,7 @@ export function buildBlackHoleObject(
       discMesh.lookAt(0, 0, 0);
       discMesh.rotateZ((layer.discSpinDeg * Math.PI) / 180);
       discMesh.rotateX((layer.discTiltDeg * Math.PI) / 180);
+      syncDiscFrame();
     }
   };
 
