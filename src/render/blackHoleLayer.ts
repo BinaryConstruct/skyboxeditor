@@ -101,11 +101,66 @@ out vec2 vLocal;  // disc-plane coords in shadow-radius units
 out vec3 vWorld;  // world position (camera is at the origin)
 
 uniform float horizonWorld;
+// seam continuity (near half only, warpSeam = 1): the captured far half is
+// displaced by the lens, so at the near/far boundary the straight near half
+// would disconnect from it. Solve the lens equation per vertex (fixed-point
+// on the deflection LUT) and displace the near half by the SAME amount at
+// the seam, decaying to zero toward the front center — the two images then
+// meet position-continuously.
+uniform sampler2D deflLut;
+uniform vec3 discCenter;
+uniform float thetaH;
+uniform float thetaE;
+uniform float lutScale;
+uniform float lutXMax;
+uniform float seamW;      // world-space decay width of the seam warp
+uniform float warpSeam;   // 1 = apply (near half), 0 = plain (far half)
+
+float deflAt(float th) {
+  float x = th / max(thetaH, 1e-5);
+  if (x < lutXMax) {
+    float u = clamp(sqrt(max(x - 1.0, 0.0) / (lutXMax - 1.0)), 0.0, 1.0);
+    return lutScale * texture(deflLut, vec2(u, 0.5)).r;
+  }
+  return (thetaE * thetaE) / th;
+}
 
 void main() {
   vLocal = position.xy / horizonWorld;
-  vWorld = (modelMatrix * vec4(position, 1.0)).xyz;
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  vec3 world = (modelMatrix * vec4(position, 1.0)).xyz;
+  vWorld = world; // shading uses the SOURCE position (undisplaced)
+
+  vec3 outPos = world;
+  if (warpSeam > 0.5) {
+    vec3 bhN = normalize(discCenter);
+    float side = dot(world - discCenter, bhN); // negative on the near side
+    float blend = 1.0 - smoothstep(0.0, seamW, -side);
+    if (blend > 0.001) {
+      float wLen = length(world);
+      vec3 vDir = world / wLen;
+      float beta = acos(clamp(dot(vDir, bhN), -1.0, 1.0));
+      // image angle: th = beta + defl(th), damped fixed-point (converges
+      // fast at disc radii, which sit well outside the photon ring)
+      float th = max(beta, thetaH * 1.05);
+      for (int i = 0; i < 4; i++) {
+        th = 0.5 * th + 0.5 * (beta + deflAt(th));
+        th = clamp(th, beta, beta + 3.0 * thetaH);
+      }
+      float delta = (th - beta) * blend;
+      // rotate the view direction AWAY from the hole by delta (the lens
+      // shows images pushed outward), keeping the same distance
+      vec3 axis = cross(bhN, vDir);
+      float axisLen = length(axis);
+      if (axisLen > 1e-6 && delta > 1e-6) {
+        axis /= axisLen;
+        float c = cos(delta);
+        float sn = sin(delta);
+        vec3 bent = vDir * c + cross(axis, vDir) * sn + axis * dot(axis, vDir) * (1.0 - c);
+        outPos = bent * wLen;
+      }
+    }
+  }
+  gl_Position = projectionMatrix * viewMatrix * vec4(outPos, 1.0);
 }
 `;
 
@@ -127,6 +182,8 @@ uniform float amount;
 uniform float doppler;
 uniform float kelvin;       // temperature at the inner edge
 uniform float seedOff;      // per-layer streak pattern offset
+uniform float halfSel;      // +1 far half only, -1 near half only, 0 whole
+uniform float featherW;     // world-space width of the near/far cross-fade
 
 in vec2 vLocal;
 in vec3 vWorld;
@@ -150,6 +207,20 @@ float fbm(vec2 p) {
 void main() {
   float r = length(vLocal);
   if (r < innerR || r > outerR) discard;
+  // near/far split at the plane through the BH center perpendicular to the
+  // view direction: the far half is captured and lensed (the hat), the near
+  // half is drawn straight over the lens like a planetary ring in front.
+  // Cross-faded over a feather zone — a hard cut prints a sawtooth seam
+  // where the bent and straight images meet at a grazing angle.
+  float side = dot(vWorld - discCenter, normalize(discCenter));
+  float nearW = 1.0 - smoothstep(-featherW, featherW, side);
+  // the captured (far) mesh keeps the near half at reduced weight: its
+  // wound image is genuine physics and closes the hat loop that a hard
+  // near-side cut left dangling; the direct near image drawn on top stays
+  // dominant
+  float halfW = halfSel > 0.5 ? mix(0.4, 1.0, 1.0 - nearW)
+    : (halfSel < -0.5 ? nearW : 1.0);
+  if (halfW <= 0.004) discard;
   float rs = r * B_CRIT; // radius in Schwarzschild radii
 
   float env = smoothstep(innerR, innerR * 1.1, r)
@@ -181,7 +252,7 @@ void main() {
   // gentler radial falloff than the sprite baker: at layer scale the broad
   // disc is the readable feature, and the lens compresses it further
   float I = amount * env * density * pow(innerR / r, 1.4)
-    * dE * dE * dE * g * g * 3.2;
+    * dE * dE * dE * g * g * 3.2 * halfW;
   vec3 c = col * I;
   // soft shoulder (same as the sprite baker) so hot regions keep their hue
   c = c * 1.55 / (1.0 + c);
@@ -271,55 +342,79 @@ export function buildBlackHoleObject(
   });
   const cubeCam = new THREE.CubeCamera(0.1, skyRadius * 4, rt);
 
-  // accretion disc (drawn beneath the lens quad so the capture includes it)
-  let discMesh: THREE.Mesh | null = null;
-  let discMat: THREE.ShaderMaterial | null = null;
+  // Accretion disc, split at the BH into two meshes with the same shader:
+  // - FAR half sits below the lens quad, so the capture includes it and the
+  //   lens bends it into the hat / wound imagery;
+  // - NEAR half draws ON TOP of the lens quad, straight, like a planetary
+  //   ring passing in front (light from between the hole and the camera is
+  //   barely deflected, so warping it like the back half read wrong).
+  const discMeshes: THREE.Mesh[] = [];
+  const discMats: THREE.ShaderMaterial[] = [];
+  let nearDiscMesh: THREE.Mesh | null = null;
   let discGeo: THREE.PlaneGeometry | null = null;
+  // shared uniform storage so one sync updates both halves
+  const discCenterU = new THREE.Vector3();
+  const discNormalU = new THREE.Vector3(0, 0, 1);
   const horizonWorld = thetaH * skyRadius;
   if (layer.discAmount > 0) {
     const discWorld = layer.discOuter * horizonWorld;
-    discGeo = new THREE.PlaneGeometry(discWorld * 2.1, discWorld * 2.1);
-    discMat = new THREE.ShaderMaterial({
-      glslVersion: THREE.GLSL3,
-      vertexShader: DISC_VERT,
-      fragmentShader: DISC_FRAG,
-      uniforms: {
-        horizonWorld: { value: horizonWorld },
-        bbLut: { value: getBlackbodyLutTexture() },
-        discCenter: { value: new THREE.Vector3() }, // synced below + on place
-        discNormal: { value: new THREE.Vector3(0, 0, 1) },
-        innerR: { value: layer.discInner },
-        outerR: { value: layer.discOuter },
-        amount: { value: layer.discAmount },
-        doppler: { value: layer.discDoppler },
-        kelvin: { value: layer.discKelvin },
-        seedOff: { value: (layer.seed >>> 0) % 977 },
-      },
-      depthTest: false,
-      depthWrite: false,
-      side: THREE.DoubleSide,
-    });
-    applyBlend(discMat, 'one', 'one');
-    discMesh = new THREE.Mesh(discGeo, discMat);
-    discMesh.position.copy(dir).multiplyScalar(skyRadius * 0.94);
-    // orient: start facing the origin, then tilt/spin the disc plane
-    discMesh.lookAt(0, 0, 0);
-    discMesh.rotateZ((layer.discSpinDeg * Math.PI) / 180);
-    // tilt 0 = face-on ring, 90 = edge-on line
-    discMesh.rotateX((layer.discTiltDeg * Math.PI) / 180);
-    discMesh.renderOrder = index;
-    discMesh.frustumCulled = false;
-    group.add(discMesh);
+    discGeo = new THREE.PlaneGeometry(discWorld * 2.1, discWorld * 2.1, 72, 72);
+    for (const halfSel of [1, -1]) {
+      const mat = new THREE.ShaderMaterial({
+        glslVersion: THREE.GLSL3,
+        vertexShader: DISC_VERT,
+        fragmentShader: DISC_FRAG,
+        uniforms: {
+          horizonWorld: { value: horizonWorld },
+          bbLut: { value: getBlackbodyLutTexture() },
+          discCenter: { value: discCenterU },
+          discNormal: { value: discNormalU },
+          innerR: { value: layer.discInner },
+          outerR: { value: layer.discOuter },
+          amount: { value: layer.discAmount },
+          doppler: { value: layer.discDoppler },
+          kelvin: { value: layer.discKelvin },
+          seedOff: { value: (layer.seed >>> 0) % 977 },
+          halfSel: { value: halfSel },
+          featherW: { value: horizonWorld * 0.9 },
+          deflLut: { value: getDeflectionLutTexture() },
+          thetaH: { value: thetaH },
+          thetaE: { value: thetaE },
+          lutScale: { value: (thetaE * thetaE * CRITICAL_B) / (2 * thetaH) },
+          lutXMax: { value: LUT_X_MAX },
+          seamW: { value: horizonWorld * 2.4 },
+          warpSeam: { value: halfSel < 0 ? 1 : 0 },
+        },
+        depthTest: false,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      });
+      applyBlend(mat, 'one', 'one');
+      const mesh = new THREE.Mesh(discGeo, mat);
+      // far half under the lens (captured); near half above it (straight)
+      mesh.renderOrder = halfSel > 0 ? index : index + 0.6;
+      mesh.frustumCulled = false;
+      discMats.push(mat);
+      discMeshes.push(mesh);
+      if (halfSel < 0) nearDiscMesh = mesh;
+      group.add(mesh);
+    }
   }
 
-  // the disc shader needs the plane's world center + normal for the Doppler
-  // geometry; recompute after every (re)orientation
+  // (re)orient both halves and refresh the shared Doppler-frame uniforms
   const syncDiscFrame = (): void => {
-    if (!discMesh || !discMat) return;
-    discMesh.updateMatrixWorld();
-    (discMat.uniforms.discCenter.value as THREE.Vector3).copy(discMesh.position);
-    (discMat.uniforms.discNormal.value as THREE.Vector3)
-      .set(0, 0, 1).applyQuaternion(discMesh.quaternion).normalize();
+    for (const mesh of discMeshes) {
+      mesh.position.copy(dir).multiplyScalar(skyRadius * 0.94);
+      mesh.lookAt(0, 0, 0);
+      mesh.rotateZ((layer.discSpinDeg * Math.PI) / 180);
+      // tilt 0 = face-on ring, 90 = edge-on line
+      mesh.rotateX((layer.discTiltDeg * Math.PI) / 180);
+      mesh.updateMatrixWorld();
+    }
+    if (discMeshes.length) {
+      discCenterU.copy(discMeshes[0].position);
+      discNormalU.set(0, 0, 1).applyQuaternion(discMeshes[0].quaternion).normalize();
+    }
   };
   syncDiscFrame();
 
@@ -381,13 +476,7 @@ export function buildBlackHoleObject(
     lensMesh.lookAt(0, 0, 0);
     proxy.position.copy(dir).multiplyScalar(skyRadius * 0.9);
     proxy.lookAt(0, 0, 0);
-    if (discMesh) {
-      discMesh.position.copy(dir).multiplyScalar(skyRadius * 0.94);
-      discMesh.lookAt(0, 0, 0);
-      discMesh.rotateZ((layer.discSpinDeg * Math.PI) / 180);
-      discMesh.rotateX((layer.discTiltDeg * Math.PI) / 180);
-      syncDiscFrame();
-    }
+    syncDiscFrame();
   };
 
   return {
@@ -395,6 +484,8 @@ export function buildBlackHoleObject(
     placeable: layer.locked ? undefined : { mesh: proxy, place },
     prepare: (renderer, scene, pointScale = 1) => {
       lensMesh.visible = false;
+      // the near half must not be captured: it draws straight over the lens
+      if (nearDiscMesh) nearDiscMesh.visible = false;
       const scaled: Array<{ u: { value: number }; orig: number }> = [];
       if (pointScale !== 1) {
         scene.traverse((o) => {
@@ -411,12 +502,13 @@ export function buildBlackHoleObject(
       cubeCam.update(renderer, scene);
       for (const { u, orig } of scaled) u.value = orig;
       lensMesh.visible = true;
+      if (nearDiscMesh) nearDiscMesh.visible = true;
     },
     dispose: () => {
       lensGeo.dispose();
       lensMat.dispose();
       discGeo?.dispose();
-      discMat?.dispose();
+      for (const m of discMats) m.dispose();
       proxyGeo.dispose();
       proxyMat.dispose();
       rt.dispose();
