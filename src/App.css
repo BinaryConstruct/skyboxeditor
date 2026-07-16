@@ -150,6 +150,27 @@
   letter-spacing: 0.01em;
 }
 
+.icon-links {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.icon-links a {
+  color: #8b93a7;
+  display: inline-flex;
+}
+
+.icon-links a:hover {
+  color: #e6e9f2;
+}
+
+.file-row {
+  display: flex;
+  justify-content: flex-end;
+  margin: 6px 0 2px;
+}
+
 .file-buttons,
 .add-buttons {
   display: flex;

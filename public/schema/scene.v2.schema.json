@@ -1463,7 +1463,7 @@
               },
               "discTiltDeg": {
                 "type": "number",
-                "default": 72
+                "default": 100
               },
               "discSpinDeg": {
                 "type": "number",

@@ -296,9 +296,13 @@ function bakeBlackHole(p: AnomalyGenParams): HTMLCanvasElement {
         // gravitational redshift
         const g = Math.sqrt(Math.max(0.05, 1 - 1 / rho));
 
-        // temperature profile + observed shift -> blackbody color
+        // Doppler color normalized to peak at Tref on the approaching side,
+        // falling toward ~Tref/10 on the receding side at full Doppler
+        // (matches the positional layer's lens shader)
+        const dMax = 1 / (gamma * (1 - vK));
+        const shift = Math.pow(Math.max(delta / dMax, 1e-3), 1 + 2.2 * dop);
         const T = Tref * Math.pow(rIn / rho, 0.75);
-        const Tobs = Math.min(39000, Math.max(1200, T * dEff * g));
+        const Tobs = Math.min(39000, Math.max(1200, T * shift * g));
         const col = kelvinToRgb(Tobs);
 
         // radius-twisted density noise (differential-rotation streaks)

@@ -165,3 +165,46 @@ export function buildDeflectionLut(n = 256, xMax = 9): Float32Array {
   }
   return lut;
 }
+
+/**
+ * 2D trajectory LUT for shader-side disc rendering: r (in rs) sampled over
+ * impact parameter b (X, linear 0..bMax) and swept angle phi (Y, linear
+ * 0..phiMax), traced from a camera at r0. Two channels per texel: [radius,
+ * validity]. Past a trajectory's end the radius HOLDS its last value (so
+ * linear filtering never interpolates through a disc's radius range - a
+ * sentinel would) and validity drops to 0; shaders reject crossings whose
+ * bilinear-blended validity falls below ~0.75. This is the sprite baker's
+ * algorithm packaged for a fragment shader: a disc-plane crossing at known
+ * phi becomes a single texture fetch.
+ */
+export interface TrajectoryLut {
+  data: Float32Array;
+  nB: number;
+  nPhi: number;
+  bMax: number;
+  phiMax: number;
+}
+
+export function buildTrajectoryLut(
+  r0: number,
+  nB = 384,
+  nPhi = 160,
+  bMax = 28,
+  phiMax = 3 * Math.PI,
+): TrajectoryLut {
+  const data = new Float32Array(nB * nPhi * 2);
+  for (let i = 0; i < nB; i++) {
+    const b = ((i + 0.5) / nB) * bMax;
+    const t = tracePlanar(b, { r0, phiStep: Math.PI / 512, phiMax });
+    let hold = t.rOfPhi.length ? t.rOfPhi[t.rOfPhi.length - 1] : r0;
+    for (let j = 0; j < nPhi; j++) {
+      const phi = ((j + 0.5) / nPhi) * phiMax;
+      const r = radiusAtPhi(t, phi);
+      const valid = !Number.isNaN(r);
+      if (valid) hold = r;
+      data[(j * nB + i) * 2] = valid ? r : hold;
+      data[(j * nB + i) * 2 + 1] = valid ? 1 : 0;
+    }
+  }
+  return { data, nB, nPhi, bMax, phiMax };
+}

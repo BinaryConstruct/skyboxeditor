@@ -688,7 +688,7 @@ function BlackHoleControls({ layer, set }: { layer: BlackHoleLayer; set: Setter 
           <>
             <SliderField label="Inner" value={layer.discInner} min={1.2} max={3} step={0.05} onChange={(discInner) => set({ discInner, discOuter: Math.max(layer.discOuter, discInner + 0.3) })} />
             <SliderField label="Outer" value={layer.discOuter} min={1.8} max={8} step={0.1} onChange={(discOuter) => set({ discOuter, discInner: Math.min(layer.discInner, discOuter - 0.3) })} />
-            <SliderField label="Tilt°" value={layer.discTiltDeg} min={0} max={90} integer onChange={(discTiltDeg) => set({ discTiltDeg })} />
+            <SliderField label="Tilt°" value={layer.discTiltDeg} min={0} max={180} integer onChange={(discTiltDeg) => set({ discTiltDeg })} />
             <SliderField label="Spin°" value={layer.discSpinDeg} min={-180} max={180} integer onChange={(discSpinDeg) => set({ discSpinDeg })} />
             <SliderField label="Temp K" value={layer.discKelvin} min={2000} max={20000} step={100} onChange={(discKelvin) => set({ discKelvin })} />
             <SliderField label="Doppler" value={layer.discDoppler} min={0} max={1} onChange={(discDoppler) => set({ discDoppler })} />

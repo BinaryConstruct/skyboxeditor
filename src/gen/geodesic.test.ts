@@ -61,3 +61,32 @@ describe('planar Schwarzschild geodesics', () => {
     expect(lut[lut.length - 1]).toBeLessThan(0.5);
   });
 });
+
+describe('trajectory LUT', () => {
+  it('records sane crossing radii and marks ended trajectories with 0', async () => {
+    const { buildTrajectoryLut } = await import('./geodesic');
+    const lut = buildTrajectoryLut(30, 48, 64, 20);
+    const at = (i: number, j: number) => lut.data[(j * 48 + i) * 2];
+    const validAt = (i: number, j: number) => lut.data[(j * 48 + i) * 2 + 1];
+    // a mid-range impact parameter: r at small phi is near the camera
+    // distance and decreases toward closest approach
+    const i = Math.floor((8 / 20) * 48); // b ~ 8
+    expect(at(i, 1)).toBeGreaterThan(15);
+    let rMin = Infinity;
+    let invalids = 0;
+    for (let j = 0; j < 64; j++) {
+      if (validAt(i, j) < 1) { invalids++; continue; }
+      rMin = Math.min(rMin, at(i, j));
+    }
+    expect(rMin).toBeLessThan(9);
+    expect(rMin).toBeGreaterThan(5);
+    expect(invalids).toBeGreaterThan(0); // escaped before phiMax
+    // invalid entries HOLD the last radius (no sentinel jumps for linear
+    // filtering to sweep through disc radii) and carry validity 0
+    const ic = Math.floor((1.5 / 20) * 48);
+    expect(validAt(ic, 0)).toBe(1);
+    expect(validAt(ic, 63)).toBe(0);
+    expect(at(ic, 63)).toBeGreaterThan(0.9); // held near the capture radius
+    expect(at(ic, 63)).toBeLessThan(2);
+  });
+});

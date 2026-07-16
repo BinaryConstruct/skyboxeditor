@@ -498,7 +498,7 @@ export function defaultBlackHoleLayer(name = 'Black Hole'): BlackHoleLayer {
     discAmount: 0.8,
     discInner: 1.7,
     discOuter: 3.6,
-    discTiltDeg: 72,
+    discTiltDeg: 100,
     discSpinDeg: 0,
     discKelvin: 4500,
     discDoppler: 0.5,

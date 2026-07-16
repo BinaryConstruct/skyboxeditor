@@ -1,15 +1,21 @@
 /**
  * Black hole distortion layer: a lens quad that replaces the sky behind it
  * with a gravitationally-bent sample of a background cubemap (captured from
- * the scene with the lens hidden), plus a photon ring and an additive
- * accretion disc. The disc is captured too, so its far side is bent over the
- * hole — the classic "hat" — for free.
+ * the scene with the lens hidden) and renders the accretion disc ANALYTICALLY
+ * per pixel from a precomputed geodesic trajectory LUT — the same algorithm
+ * as the PCG sprite baker (src/gen/anomalyGen.ts), so the layer shows the
+ * true Luminet anatomy: the primary disc image (near side passing straight
+ * in front, far side lensed into the hat over the shadow) plus the inverted
+ * secondary image hugging the photon ring, brightest opposite the hat, the
+ * two swapping roles as the disc tilts through edge-on.
  */
 import * as THREE from 'three';
+import { DataUtils } from 'three';
 import { kelvinToRgb } from '../core/blackbody';
-import { CRITICAL_B, buildDeflectionLut } from '../gen/geodesic';
+import {
+  CRITICAL_B, buildDeflectionLut, buildTrajectoryLut,
+} from '../gen/geodesic';
 import type { BlackHoleLayer } from '../core/layers';
-import { applyBlend } from './blend';
 
 const LENS_VERT = /* glsl */ `
 out vec3 vWorld;
@@ -33,8 +39,128 @@ uniform float ringAmt;
 uniform float lutScale;  // thetaE^2 * b_c / (2 thetaH): weak-field continuity
 uniform float lutXMax;   // LUT domain end in x
 
+// analytic disc (all radii in Schwarzschild units, rs = 1)
+uniform sampler2D trajLut;  // r(b, phi) trajectory curves from the camera
+uniform float trajBMax;
+uniform float trajPhiMax;
+uniform sampler2D bbLut;    // blackbody colors, 1000..30000 K
+uniform vec3 discN;         // disc plane basis in world space
+uniform vec3 discU;
+uniform vec3 discV;
+uniform float discRIn;
+uniform float discROut;
+uniform float discAmt;
+uniform float discDop;
+uniform float discKel;
+uniform float discSeed;
+
 in vec3 vWorld;
 out vec4 fragColor;
+
+const float PI = 3.14159265;
+const float B_CRIT = 2.598076211; // 3*sqrt(3)/2
+
+// Hoskins-style hash: no transcendentals, so the streak pattern is stable
+// across GPU vendors (sin-based hashes amplify implementation differences)
+float hash(vec2 p) {
+  vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+  p3 += dot(p3, p3.yzx + 33.33);
+  return fract((p3.x + p3.y) * p3.z);
+}
+float vnoise(vec2 p) {
+  vec2 i = floor(p); vec2 f = fract(p);
+  vec2 u = f * f * (3.0 - 2.0 * f);
+  return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x),
+             mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
+}
+float fbm(vec2 p) {
+  float a = 0.5; float sum = 0.0;
+  for (int k = 0; k < 4; k++) { sum += a * vnoise(p); p *= 2.02; a *= 0.5; }
+  return sum;
+}
+
+/**
+ * Accretion disc via geodesic disc-plane crossings — the sprite baker's
+ * algorithm in shader form. The pixel ray's orbital plane crosses the disc
+ * plane at known swept angles phi_k = phi0 + pi/2 + k*pi; the radius there
+ * is one trajectory-LUT fetch. Crossing 0 is the primary image (near side
+ * straight, far side lensed into the hat), crossing 1 the inverted
+ * secondary hugging the ring.
+ */
+vec3 discColor(vec3 dir, float theta) {
+  if (discAmt <= 0.0) return vec3(0.0);
+  // impact parameter of a ray through the camera at angle theta from a hole
+  // at distance D: b = D sin(theta), with D = b_c / sin(thetaH)
+  float b = (sin(theta) / sin(thetaH)) * B_CRIT;
+  if (b >= trajBMax) return vec3(0.0);
+
+  // orbital-plane basis: radial from BH toward the camera, tangential along
+  // the view ray's transverse component
+  vec3 radial = -bhDir;
+  vec3 tang = dir - radial * dot(radial, dir);
+  float tl = length(tang);
+  if (tl < 1e-5) return vec3(0.0); // dead center: shadow anyway
+  tang /= tl;
+
+  float an = dot(radial, discN);
+  float tn = dot(tang, discN);
+  if (abs(an) + abs(tn) < 1e-5) return vec3(0.0); // grazing the disc plane
+  float phi0 = atan(tn, an);
+
+  float kf = ceil((0.06 - phi0 - 0.5 * PI) / PI);
+  float light = 1.0;
+  vec3 acc = vec3(0.0);
+  for (int i = 0; i < 3; i++) {
+    float phiK = phi0 + 0.5 * PI + (kf + float(i)) * PI;
+    if (phiK >= trajPhiMax) break;
+    vec2 tr = texture(trajLut, vec2(b / trajBMax, phiK / trajPhiMax)).rg;
+    // validity < ~1 means bilinear touched a beyond-trajectory texel; the
+    // held radius channel stays smooth but the crossing is not real there
+    if (tr.g < 0.75) continue;
+    float rho = tr.r;
+    if (rho < discRIn || rho > discROut) continue;
+
+    float env = smoothstep(discRIn, discRIn * 1.1, rho)
+      * (1.0 - smoothstep(discROut * 0.82, discROut, rho));
+    if (env <= 0.002) continue;
+
+    // crossing point in world-oriented rs coordinates (BH at origin)
+    vec3 q = radial * (rho * cos(phiK)) + tang * (rho * sin(phiK));
+
+    // Keplerian Doppler: prograde orbit around discN; the photon reaching
+    // the camera travels along -dir to first order
+    vec3 orb = normalize(cross(discN, q));
+    float vK = min(0.6, sqrt(0.5 / max(rho - 1.0, 1.0)));
+    float mu = dot(orb, -dir);
+    float gam = inversesqrt(1.0 - vK * vK);
+    float delta = 1.0 / (gam * (1.0 - vK * mu));
+    float dE = 1.0 + (delta - 1.0) * discDop;
+
+    float g = sqrt(max(0.05, 1.0 - 1.0 / rho));
+    // Doppler color: normalize the shift so the fully-approaching side peaks
+    // AT discKel and the receding side falls toward ~discKel/10 at full
+    // Doppler — the disc reads hot-blue incoming, cool-red outgoing
+    float dMax = 1.0 / (gam * (1.0 - vK));
+    float shift = pow(max(delta / dMax, 1e-3), 1.0 + 2.2 * discDop);
+    float T = discKel * pow(discRIn / rho, 0.75);
+    float Tobs = clamp(T * shift * g, 1000.0, 30000.0);
+    vec3 col = texture(bbLut, vec2((Tobs - 1000.0) / 29000.0, 0.5)).rgb;
+
+    // radius-twisted streaks (differential rotation)
+    float ang = atan(dot(q, discV), dot(q, discU))
+      + 2.6 * (rho - discRIn) / (discROut - discRIn);
+    float kr = 1.4 + rho * 0.16;
+    float fb = fbm(vec2(cos(ang), sin(ang)) * kr + discSeed);
+    float density = 0.35 + 0.85 * pow(fb, 1.7);
+
+    float I = discAmt * env * density * pow(discRIn / rho, 1.4)
+      * dE * dE * dE * g * g * 3.2 * light;
+    acc += col * I;
+    light *= 0.55; // transmission through each successive disc pass
+  }
+  // soft shoulder so hot regions keep their hue instead of clipping white
+  return acc * 1.55 / (1.0 + acc);
+}
 
 void main() {
   vec3 dir = normalize(vWorld);
@@ -54,7 +180,7 @@ void main() {
   // captured scene winds into ring imagery), analytic weak-field point-lens
   // beyond it. lutScale makes both branches identical in the weak field, so
   // there is no seam at the handoff.
-  float x = theta / max(thetaH, 1e-5);
+  float x = sin(theta) / max(sin(thetaH), 1e-5); // = b / b_c, perspective-true
   float phi;
   if (x < lutXMax) {
     float u = clamp(sqrt(max(x - 1.0, 0.0) / (lutXMax - 1.0)), 0.0, 1.0);
@@ -77,186 +203,24 @@ void main() {
   }
   vec3 col = texture(bgCube, bent).rgb;
 
-  // mild dimming of the wound (beta < 0) images: with true geodesic bending
-  // these are genuine far-side imagery, but physically the higher-order
-  // images are fainter, and at full strength they crowd the photon ring
+  // mild dimming of the wound (beta < 0) background images: physically the
+  // higher-order images are fainter, and at full strength they crowd the ring
   float mirrorDim = mix(0.55, 1.0, smoothstep(-thetaH * 1.2, thetaH * 0.5, beta));
   col *= mirrorDim;
 
-  // antialiased shadow boundary (replaces the old hard branch at thetaH)
+  // antialiased shadow boundary
   col *= smoothstep(thetaH - aaT * 1.5, thetaH + aaT * 1.5, theta);
 
   // photon ring just outside the horizon, sigma never below the pixel size
   col += vec3(1.0, 0.85, 0.6) * ringAmt
     * exp(-pow((theta - thetaH * 1.16) / max(thetaH * 0.09, aaT * 1.5), 2.0));
 
+  // analytic accretion disc (primary + secondary geodesic images)
+  col += discColor(dir, theta);
+
   // alpha feather to the true background (NormalBlending draws the real
   // scene wherever alpha < 1)
   fragColor = vec4(col, fade);
-}
-`;
-
-const DISC_VERT = /* glsl */ `
-out vec2 vLocal;  // disc-plane coords in shadow-radius units
-out vec3 vWorld;  // world position (camera is at the origin)
-
-uniform float horizonWorld;
-// seam continuity (near half only, warpSeam = 1): the captured far half is
-// displaced by the lens, so at the near/far boundary the straight near half
-// would disconnect from it. Solve the lens equation per vertex (fixed-point
-// on the deflection LUT) and displace the near half by the SAME amount at
-// the seam, decaying to zero toward the front center — the two images then
-// meet position-continuously.
-uniform sampler2D deflLut;
-uniform vec3 discCenter;
-uniform float thetaH;
-uniform float thetaE;
-uniform float lutScale;
-uniform float lutXMax;
-uniform float seamW;      // world-space decay width of the seam warp
-uniform float warpSeam;   // 1 = apply (near half), 0 = plain (far half)
-
-float deflAt(float th) {
-  float x = th / max(thetaH, 1e-5);
-  if (x < lutXMax) {
-    float u = clamp(sqrt(max(x - 1.0, 0.0) / (lutXMax - 1.0)), 0.0, 1.0);
-    return lutScale * texture(deflLut, vec2(u, 0.5)).r;
-  }
-  return (thetaE * thetaE) / th;
-}
-
-void main() {
-  vLocal = position.xy / horizonWorld;
-  vec3 world = (modelMatrix * vec4(position, 1.0)).xyz;
-  vWorld = world; // shading uses the SOURCE position (undisplaced)
-
-  vec3 outPos = world;
-  if (warpSeam > 0.5) {
-    vec3 bhN = normalize(discCenter);
-    float side = dot(world - discCenter, bhN); // negative on the near side
-    float blend = 1.0 - smoothstep(0.0, seamW, -side);
-    if (blend > 0.001) {
-      float wLen = length(world);
-      vec3 vDir = world / wLen;
-      float beta = acos(clamp(dot(vDir, bhN), -1.0, 1.0));
-      // image angle: th = beta + defl(th), damped fixed-point (converges
-      // fast at disc radii, which sit well outside the photon ring)
-      float th = max(beta, thetaH * 1.05);
-      for (int i = 0; i < 4; i++) {
-        th = 0.5 * th + 0.5 * (beta + deflAt(th));
-        th = clamp(th, beta, beta + 3.0 * thetaH);
-      }
-      float delta = (th - beta) * blend;
-      // rotate the view direction AWAY from the hole by delta (the lens
-      // shows images pushed outward), keeping the same distance
-      vec3 axis = cross(bhN, vDir);
-      float axisLen = length(axis);
-      if (axisLen > 1e-6 && delta > 1e-6) {
-        axis /= axisLen;
-        float c = cos(delta);
-        float sn = sin(delta);
-        vec3 bent = vDir * c + cross(axis, vDir) * sn + axis * dot(axis, vDir) * (1.0 - c);
-        outPos = bent * wLen;
-      }
-    }
-  }
-  gl_Position = projectionMatrix * viewMatrix * vec4(outPos, 1.0);
-}
-`;
-
-const DISC_FRAG = /* glsl */ `
-precision highp float;
-
-// Physical disc shading, mirroring the geodesic PCG sprite baker:
-// T ~ r^-0.75 Novikov-Thorne profile via a blackbody LUT, Keplerian Doppler
-// with relativistic beaming, gravitational redshift, and radius-twisted FBM
-// density for differential-rotation streaks. The lens quad captures and
-// bends this disc, so the far-side hat and ring imagery emerge downstream.
-
-uniform sampler2D bbLut;    // blackbody colors, 1000..30000 K
-uniform vec3 discCenter;    // BH center in world space
-uniform vec3 discNormal;    // disc plane normal in world space
-uniform float innerR;       // shadow radii
-uniform float outerR;
-uniform float amount;
-uniform float doppler;
-uniform float kelvin;       // temperature at the inner edge
-uniform float seedOff;      // per-layer streak pattern offset
-uniform float halfSel;      // +1 far half only, -1 near half only, 0 whole
-uniform float featherW;     // world-space width of the near/far cross-fade
-
-in vec2 vLocal;
-in vec3 vWorld;
-out vec4 fragColor;
-
-const float B_CRIT = 2.598076211;  // rs per shadow radius (3*sqrt(3)/2)
-
-float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-float vnoise(vec2 p) {
-  vec2 i = floor(p); vec2 f = fract(p);
-  vec2 u = f * f * (3.0 - 2.0 * f);
-  return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x),
-             mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
-}
-float fbm(vec2 p) {
-  float a = 0.5; float sum = 0.0;
-  for (int k = 0; k < 4; k++) { sum += a * vnoise(p); p *= 2.02; a *= 0.5; }
-  return sum;
-}
-
-void main() {
-  float r = length(vLocal);
-  if (r < innerR || r > outerR) discard;
-  // near/far split at the plane through the BH center perpendicular to the
-  // view direction: the far half is captured and lensed (the hat), the near
-  // half is drawn straight over the lens like a planetary ring in front.
-  // Cross-faded over a feather zone — a hard cut prints a sawtooth seam
-  // where the bent and straight images meet at a grazing angle.
-  float side = dot(vWorld - discCenter, normalize(discCenter));
-  float nearW = 1.0 - smoothstep(-featherW, featherW, side);
-  // the captured (far) mesh keeps the near half at reduced weight: its
-  // wound image is genuine physics and closes the hat loop that a hard
-  // near-side cut left dangling; the direct near image drawn on top stays
-  // dominant
-  float halfW = halfSel > 0.5 ? mix(0.4, 1.0, 1.0 - nearW)
-    : (halfSel < -0.5 ? nearW : 1.0);
-  if (halfW <= 0.004) discard;
-  float rs = r * B_CRIT; // radius in Schwarzschild radii
-
-  float env = smoothstep(innerR, innerR * 1.1, r)
-    * (1.0 - smoothstep(outerR * 0.82, outerR, r));
-
-  // Keplerian Doppler: material orbits prograde around the disc normal;
-  // the camera sits at the world origin
-  vec3 rel = vWorld - discCenter;
-  vec3 orb = normalize(cross(discNormal, rel));
-  vec3 toCam = -normalize(vWorld);
-  float vK = min(0.6, sqrt(0.5 / max(rs - 1.0, 1.0)));
-  float mu = dot(orb, toCam);
-  float gam = inversesqrt(1.0 - vK * vK);
-  float delta = 1.0 / (gam * (1.0 - vK * mu));
-  float dE = 1.0 + (delta - 1.0) * doppler;
-
-  // gravitational redshift + temperature profile -> blackbody color
-  float g = sqrt(max(0.05, 1.0 - 1.0 / rs));
-  float T = kelvin * pow(innerR / r, 0.75);
-  float Tobs = clamp(T * dE * g, 1000.0, 30000.0);
-  vec3 col = texture(bbLut, vec2((Tobs - 1000.0) / 29000.0, 0.5)).rgb;
-
-  // radius-twisted streaks (differential rotation)
-  float ang = atan(vLocal.y, vLocal.x) + 2.6 * (r - innerR) / (outerR - innerR);
-  float kr = 1.4 + rs * 0.16;
-  float fb = fbm(vec2(cos(ang), sin(ang)) * kr + seedOff);
-  float density = 0.35 + 0.85 * pow(fb, 1.7);
-
-  // gentler radial falloff than the sprite baker: at layer scale the broad
-  // disc is the readable feature, and the lens compresses it further
-  float I = amount * env * density * pow(innerR / r, 1.4)
-    * dE * dE * dE * g * g * 3.2 * halfW;
-  vec3 c = col * I;
-  // soft shoulder (same as the sprite baker) so hot regions keep their hue
-  c = c * 1.55 / (1.0 + c);
-  fragColor = vec4(c, 1.0);
 }
 `;
 
@@ -266,6 +230,26 @@ void main() {
 // built lazily once per session (pure math, deterministic).
 const LUT_X_MAX = 9;
 let lutTexture: THREE.DataTexture | null = null;
+
+// half-float LUTs: linear filtering on full 32-bit float textures requires
+// OES_texture_float_linear, which some mobile GPUs lack; half float linear
+// is near-universal and the value ranges here fit comfortably
+function toHalf(src: Float32Array): Uint16Array {
+  const out = new Uint16Array(src.length);
+  for (let i = 0; i < src.length; i++) out[i] = DataUtils.toHalfFloat(src[i]);
+  return out;
+}
+
+function getDeflectionLutTexture(): THREE.DataTexture {
+  if (!lutTexture) {
+    const lut = buildDeflectionLut(256, LUT_X_MAX);
+    lutTexture = new THREE.DataTexture(toHalf(lut), lut.length, 1, THREE.RedFormat, THREE.HalfFloatType);
+    lutTexture.minFilter = THREE.LinearFilter;
+    lutTexture.magFilter = THREE.LinearFilter;
+    lutTexture.needsUpdate = true;
+  }
+  return lutTexture;
+}
 
 // Blackbody color LUT (1000..30000 K) from the same kelvinToRgb the rest of
 // the app uses, so disc hues match star/sprite hues exactly.
@@ -279,22 +263,38 @@ function getBlackbodyLutTexture(): THREE.DataTexture {
       data[i * 4] = rgb.r; data[i * 4 + 1] = rgb.g; data[i * 4 + 2] = rgb.b;
       data[i * 4 + 3] = 1;
     }
-    bbTexture = new THREE.DataTexture(data, n, 1, THREE.RGBAFormat, THREE.FloatType);
+    bbTexture = new THREE.DataTexture(toHalf(data), n, 1, THREE.RGBAFormat, THREE.HalfFloatType);
     bbTexture.minFilter = THREE.LinearFilter;
     bbTexture.magFilter = THREE.LinearFilter;
     bbTexture.needsUpdate = true;
   }
   return bbTexture;
 }
-function getDeflectionLutTexture(): THREE.DataTexture {
-  if (!lutTexture) {
-    const lut = buildDeflectionLut(256, LUT_X_MAX);
-    lutTexture = new THREE.DataTexture(lut, lut.length, 1, THREE.RedFormat, THREE.FloatType);
-    lutTexture.minFilter = THREE.LinearFilter;
-    lutTexture.magFilter = THREE.LinearFilter;
-    lutTexture.needsUpdate = true;
+
+// Trajectory LUTs r(b, phi) depend on the camera->BH distance in rs (set by
+// the shadow's apparent size), so they are cached per rounded distance.
+const TRAJ_B_MAX = 28;
+const TRAJ_PHI_MAX = 3 * Math.PI;
+const trajCache = new Map<number, THREE.DataTexture>();
+function getTrajectoryLutTexture(thetaH: number): THREE.DataTexture {
+  const r0 = Math.min(200, Math.max(8, CRITICAL_B / Math.sin(thetaH)));
+  const key = Math.round(r0 * 2);
+  let tex = trajCache.get(key);
+  if (!tex) {
+    const lut = buildTrajectoryLut(key / 2, 384, 160, TRAJ_B_MAX, TRAJ_PHI_MAX);
+    tex = new THREE.DataTexture(toHalf(lut.data), lut.nB, lut.nPhi, THREE.RGFormat, THREE.HalfFloatType);
+    tex.minFilter = THREE.LinearFilter;
+    tex.magFilter = THREE.LinearFilter;
+    tex.needsUpdate = true;
+    // bound the MAP size only - never dispose() on eviction, an evicted
+    // texture may still be referenced by a live material (three.js would
+    // silently re-upload it and the cache would churn instead of help)
+    if (trajCache.size > 12) {
+      trajCache.delete(trajCache.keys().next().value as number);
+    }
+    trajCache.set(key, tex);
   }
-  return lutTexture;
+  return tex;
 }
 
 export interface BlackHoleObject {
@@ -329,9 +329,14 @@ export function buildBlackHoleObject(
 
   const thetaH = Math.max(0.005, layer.apparentSize);
   const thetaE = thetaH * (1 + 1.8 * layer.lensStrength);
-  // tighter footprint + a wider edge fade: the rectangle seam came from a
-  // huge lens quad whose blurred capture mismatched the crisp sky
-  const coverage = Math.min(0.55, thetaE * 2.2 + thetaH * 2);
+  // footprint covers both the bend region and the whole analytic disc
+  const discThetaOut = layer.discAmount > 0
+    ? Math.atan(Math.tan(thetaH) * layer.discOuter) * 1.15
+    : 0;
+  const coverage = Math.min(1.1, Math.max(
+    Math.min(0.55, thetaE * 2.2 + thetaH * 2),
+    discThetaOut,
+  ));
 
   // background capture target
   const rt = new THREE.WebGLCubeRenderTarget(captureSize, {
@@ -342,81 +347,23 @@ export function buildBlackHoleObject(
   });
   const cubeCam = new THREE.CubeCamera(0.1, skyRadius * 4, rt);
 
-  // Accretion disc, split at the BH into two meshes with the same shader:
-  // - FAR half sits below the lens quad, so the capture includes it and the
-  //   lens bends it into the hat / wound imagery;
-  // - NEAR half draws ON TOP of the lens quad, straight, like a planetary
-  //   ring passing in front (light from between the hole and the camera is
-  //   barely deflected, so warping it like the back half read wrong).
-  const discMeshes: THREE.Mesh[] = [];
-  const discMats: THREE.ShaderMaterial[] = [];
-  let nearDiscMesh: THREE.Mesh | null = null;
-  let discGeo: THREE.PlaneGeometry | null = null;
-  // shared uniform storage so one sync updates both halves
-  const discCenterU = new THREE.Vector3();
-  const discNormalU = new THREE.Vector3(0, 0, 1);
-  const horizonWorld = thetaH * skyRadius;
-  if (layer.discAmount > 0) {
-    const discWorld = layer.discOuter * horizonWorld;
-    discGeo = new THREE.PlaneGeometry(discWorld * 2.1, discWorld * 2.1, 72, 72);
-    for (const halfSel of [1, -1]) {
-      const mat = new THREE.ShaderMaterial({
-        glslVersion: THREE.GLSL3,
-        vertexShader: DISC_VERT,
-        fragmentShader: DISC_FRAG,
-        uniforms: {
-          horizonWorld: { value: horizonWorld },
-          bbLut: { value: getBlackbodyLutTexture() },
-          discCenter: { value: discCenterU },
-          discNormal: { value: discNormalU },
-          innerR: { value: layer.discInner },
-          outerR: { value: layer.discOuter },
-          amount: { value: layer.discAmount },
-          doppler: { value: layer.discDoppler },
-          kelvin: { value: layer.discKelvin },
-          seedOff: { value: (layer.seed >>> 0) % 977 },
-          halfSel: { value: halfSel },
-          featherW: { value: horizonWorld * 0.9 },
-          deflLut: { value: getDeflectionLutTexture() },
-          thetaH: { value: thetaH },
-          thetaE: { value: thetaE },
-          lutScale: { value: (thetaE * thetaE * CRITICAL_B) / (2 * thetaH) },
-          lutXMax: { value: LUT_X_MAX },
-          seamW: { value: horizonWorld * 2.4 },
-          warpSeam: { value: halfSel < 0 ? 1 : 0 },
-        },
-        depthTest: false,
-        depthWrite: false,
-        side: THREE.DoubleSide,
-      });
-      applyBlend(mat, 'one', 'one');
-      const mesh = new THREE.Mesh(discGeo, mat);
-      // far half under the lens (captured); near half above it (straight)
-      mesh.renderOrder = halfSel > 0 ? index : index + 0.6;
-      mesh.frustumCulled = false;
-      discMats.push(mat);
-      discMeshes.push(mesh);
-      if (halfSel < 0) nearDiscMesh = mesh;
-      group.add(mesh);
-    }
-  }
-
-  // (re)orient both halves and refresh the shared Doppler-frame uniforms
-  const syncDiscFrame = (): void => {
-    for (const mesh of discMeshes) {
-      mesh.position.copy(dir).multiplyScalar(skyRadius * 0.94);
-      mesh.lookAt(0, 0, 0);
-      mesh.rotateZ((layer.discSpinDeg * Math.PI) / 180);
-      // tilt 0 = face-on ring, 90 = edge-on line
-      mesh.rotateX((layer.discTiltDeg * Math.PI) / 180);
-      mesh.updateMatrixWorld();
-    }
-    if (discMeshes.length) {
-      discCenterU.copy(discMeshes[0].position);
-      discNormalU.set(0, 0, 1).applyQuaternion(discMeshes[0].quaternion).normalize();
-    }
+  // disc plane basis in world space (no meshes — the disc is analytic in
+  // the lens shader). Same orientation semantics as the old disc quad:
+  // face the origin, spin about the view axis, tilt about the local x.
+  const discN = new THREE.Vector3(0, 0, 1);
+  const discU = new THREE.Vector3(1, 0, 0);
+  const discV = new THREE.Vector3(0, 1, 0);
+  const basisDummy = new THREE.Object3D();
+  const computeDiscBasis = (): void => {
+    basisDummy.position.copy(dir).multiplyScalar(skyRadius);
+    basisDummy.lookAt(0, 0, 0);
+    basisDummy.rotateZ((layer.discSpinDeg * Math.PI) / 180);
+    basisDummy.rotateX((layer.discTiltDeg * Math.PI) / 180);
+    discN.set(0, 0, 1).applyQuaternion(basisDummy.quaternion).normalize();
+    discU.set(1, 0, 0).applyQuaternion(basisDummy.quaternion).normalize();
+    discV.set(0, 1, 0).applyQuaternion(basisDummy.quaternion).normalize();
   };
-  syncDiscFrame();
+  computeDiscBasis();
 
   // lens quad: covers the lens footprint, replaces background inside it
   const quadHalf = Math.tan(coverage) * skyRadius * 0.97;
@@ -435,6 +382,19 @@ export function buildBlackHoleObject(
       ringAmt: { value: layer.photonRing },
       lutScale: { value: (thetaE * thetaE * CRITICAL_B) / (2 * thetaH) },
       lutXMax: { value: LUT_X_MAX },
+      trajLut: { value: getTrajectoryLutTexture(thetaH) },
+      trajBMax: { value: TRAJ_B_MAX },
+      trajPhiMax: { value: TRAJ_PHI_MAX },
+      bbLut: { value: getBlackbodyLutTexture() },
+      discN: { value: discN },
+      discU: { value: discU },
+      discV: { value: discV },
+      discRIn: { value: layer.discInner * CRITICAL_B },
+      discROut: { value: layer.discOuter * CRITICAL_B },
+      discAmt: { value: layer.discAmount },
+      discDop: { value: layer.discDoppler },
+      discKel: { value: layer.discKelvin },
+      discSeed: { value: (layer.seed >>> 0) % 977 },
     },
     depthTest: false,
     depthWrite: false,
@@ -476,7 +436,7 @@ export function buildBlackHoleObject(
     lensMesh.lookAt(0, 0, 0);
     proxy.position.copy(dir).multiplyScalar(skyRadius * 0.9);
     proxy.lookAt(0, 0, 0);
-    syncDiscFrame();
+    computeDiscBasis();
   };
 
   return {
@@ -484,8 +444,6 @@ export function buildBlackHoleObject(
     placeable: layer.locked ? undefined : { mesh: proxy, place },
     prepare: (renderer, scene, pointScale = 1) => {
       lensMesh.visible = false;
-      // the near half must not be captured: it draws straight over the lens
-      if (nearDiscMesh) nearDiscMesh.visible = false;
       const scaled: Array<{ u: { value: number }; orig: number }> = [];
       if (pointScale !== 1) {
         scene.traverse((o) => {
@@ -502,13 +460,10 @@ export function buildBlackHoleObject(
       cubeCam.update(renderer, scene);
       for (const { u, orig } of scaled) u.value = orig;
       lensMesh.visible = true;
-      if (nearDiscMesh) nearDiscMesh.visible = true;
     },
     dispose: () => {
       lensGeo.dispose();
       lensMat.dispose();
-      discGeo?.dispose();
-      for (const m of discMats) m.dispose();
       proxyGeo.dispose();
       proxyMat.dispose();
       rt.dispose();
