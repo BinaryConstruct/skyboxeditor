@@ -1,0 +1,13 @@
+# Cloudflare Pages custom headers. Vite copies public/ into dist/, so this
+# ships as dist/_headers and Pages applies it at the edge.
+# https://developers.cloudflare.com/pages/configuration/headers/
+
+# Hashed, content-addressed build assets — safe to cache forever.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Published JSON schema, fetched cross-origin by AI tools. Allow CORS and
+# cache moderately (the schema changes rarely but is not content-hashed).
+/schema/*
+  Access-Control-Allow-Origin: *
+  Cache-Control: public, max-age=3600
