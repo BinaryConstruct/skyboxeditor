@@ -83,8 +83,11 @@ minimal:
 
 ## Docs
 
-- `docs/` — design notes, PCG research, verification practices
-- `prd/` — feature PRDs with acceptance criteria
+- `Docs/EPIC-LIST.md` — high-level goals, status, and current focus
+- `Docs/Design/` — durable design & architecture reference
+- `Docs/Plans/` — task plans and PRDs with acceptance criteria
+- `Docs/Research/` — research summaries backing the generators
+- `Docs/Instructions/` — how-to docs (verification workflow, tooling)
 - `golden/` — reference exports from the original Windows app
 - [`AI_POLICY.md`](AI_POLICY.md) — how AI relates to this project
 

@@ -1,13 +1,13 @@
 /**
  * PCG object framework — the composable model from
- * docs/StellarObjectResearch2.md §5, adapted to this codebase's canvas-2D
+ * Docs/Research/2026-07-16-stellar-objects-layer-guidance.md §5, adapted to this codebase's canvas-2D
  * sprite bakers: a celestial object is a classification + subtype + ordered
  * stack of reusable component layers, composed deterministically onto one
  * sprite canvas.
  *
  * This module owns the CONTRACT (specs, registry, validation, composition);
  * content recipes (stellar classes, anomalies, discs …) register themselves
- * against it in a later phase — see docs/PCG-STELLAR-STYLES-PLAN.md.
+ * against it in a later phase — see Docs/Plans/2026-07-16-pcg-stellar-styles.md.
  */
 
 /** Canvas composite for a component layer's contribution. */

@@ -1,7 +1,7 @@
 /**
  * Pure math building blocks shared by the stellar / anomaly sprite bakers and
- * the composable PCG component-layer library (docs/StellarObjectResearch2.md
- * §7, docs/PCG-STELLAR-STYLES-PLAN.md §5–6). No canvas here — every function
+ * the composable PCG component-layer library (Docs/Research/2026-07-16-stellar-objects-layer-guidance.md
+ * §7, Docs/Plans/2026-07-16-pcg-stellar-styles.md §5–6). No canvas here — every function
  * is deterministic and unit-testable in the node env, unlike the per-pixel
  * bakers which need a 2D context.
  */
@@ -78,7 +78,7 @@ export function wienPeakNm(kelvin: number): number {
 
 /**
  * Kelvin anchors for the O B A F G K M main-sequence spectral sequence
- * (docs/PCG-STELLAR-STYLES-PLAN.md §3). Monotonic decreasing O→M. Exported so
+ * (Docs/Plans/2026-07-16-pcg-stellar-styles.md §3). Monotonic decreasing O→M. Exported so
  * the ordering can be asserted and reused by both the legacy sun baker and the
  * composable photosphere layer.
  */

@@ -4,7 +4,7 @@
  * events, multiples, novae/supernovae/kilonovae, quasars, obscured AGN tori,
  * magnetars, and pulsars. Dispatched by style like bakeGalaxyGen. Pure PCG:
  * canvas primitives + per-pixel fields, deterministic per seed (MSVC LCG /
- * Perlin). See docs/PCG-STELLAR-STYLES-PLAN.md §6.
+ * Perlin). See Docs/Plans/2026-07-16-pcg-stellar-styles.md §6.
  *
  * Additive-sprite caveat: baked sprites composite one/one, so a sprite can
  * only ADD light. "Dark" elements (a black hole's shadow, a torus silhouette)

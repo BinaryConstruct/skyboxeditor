@@ -3,7 +3,7 @@
  * with embedded bright stars. Pure PCG — CPU Perlin FBM + domain warp on a
  * per-pixel canvas, deterministic per seed (MSVC LCG). Style recipes are
  * loosely modeled on real formation morphologies (see
- * docs/NEBULA-PCG-RESEARCH.md).
+ * Docs/Research/2026-07-16-nebula-pcg.md).
  */
 import { kelvinToRgb } from '../core/blackbody';
 import type { Rgba } from '../core/layers';
@@ -12,7 +12,7 @@ import { MsvcRng } from '../core/rng';
 
 // 'pillars' was removed: pillars (e.g. Pillars of Creation) are a tiny inner
 // structure *within* an emission nebula, not a standalone object at sprite
-// scale — see docs/NEBULA-PCG-RESEARCH.md.
+// scale — see Docs/Research/2026-07-16-nebula-pcg.md.
 export type NebulaStyle = 'nursery' | 'dark-dust' | 'wisp' | 'shell';
 
 export interface NebulaGenParams {

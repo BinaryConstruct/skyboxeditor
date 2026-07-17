@@ -4,7 +4,7 @@
  * lane silhouette, and a Plummer/King globular cluster. The spiral path stays
  * in generators.ts (bakeGalaxyGen) — these are dispatched to by `morphology`.
  *
- * Recipes: docs/PCG-SAMPLES-RESEARCH.md §2.1 / §2.2 / §2.6. All randomness is
+ * Recipes: Docs/Research/2026-07-16-pcg-samples.md §2.1 / §2.2 / §2.6. All randomness is
  * seeded (MsvcRng / PerlinNoise), so a seed+params pair always bakes the same
  * sprite.
  */

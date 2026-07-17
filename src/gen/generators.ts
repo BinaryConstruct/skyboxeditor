@@ -309,7 +309,7 @@ export function bakeGalaxyGen(p: GalaxyGenParams): HTMLCanvasElement {
  * two star+disc composition styles. 'g' at defaults reproduces the historic
  * DEFAULT_SUN output byte-for-byte (all style-specific code paths gate to a
  * no-op there). 'pulsar' dispatches to the anomaly baker — see anomalyGen.ts.
- * (docs/PCG-STELLAR-STYLES-PLAN.md §3–5.)
+ * (Docs/Plans/2026-07-16-pcg-stellar-styles.md §3–5.)
  */
 export type SunStyle =
   | 'o' | 'b' | 'a' | 'f' | 'g' | 'k' | 'm'

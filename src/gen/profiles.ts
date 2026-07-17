@@ -2,7 +2,7 @@
  * Analytic surface-brightness and density profiles for the galaxy / cluster
  * generators. Pure math, no canvas — so they unit-test for determinism and
  * correct limiting behavior without a 2D context. Formulas and constants come
- * from docs/PCG-SAMPLES-RESEARCH.md (§2.1 Sérsic, §2.2 sech² edge-on disk,
+ * from Docs/Research/2026-07-16-pcg-samples.md (§2.1 Sérsic, §2.2 sech² edge-on disk,
  * §2.6 Plummer/King cluster).
  */
 

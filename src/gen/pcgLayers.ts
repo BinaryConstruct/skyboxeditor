@@ -1,5 +1,5 @@
 /**
- * Reusable component-layer library — docs/StellarObjectResearch2.md §8 adapted
+ * Reusable component-layer library — Docs/Research/2026-07-16-stellar-objects-layer-guidance.md §8 adapted
  * to this codebase's canvas-2D sprite scale, registered against the pcgSpec
  * framework. A PCG object is a stack of these layers, composed deterministically
  * by composePcgObject; each layer type declares a descriptor (label + tunable
