@@ -3,9 +3,10 @@
  * uploads. Uploads persist inside project bundles (assets/), and layers
  * reference them via "user:<filename>" texture ids.
  */
-import { useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { addSpriteAsset, listSpriteAssets, removeSpriteAsset } from '../assets/spriteStore';
 import { mimeForFileName } from '../export/projectBundle';
+import { PROCEDURAL_FLARES, bakeFlareCanvas } from '../render/proceduralFlares';
 
 export const BUNDLED_SPRITES = [
   'default.png',
@@ -30,6 +31,20 @@ interface SpritesTabProps {
 export function SpritesTab({ onChanged }: SpritesTabProps) {
   const fileRef = useRef<HTMLInputElement>(null);
   const userSprites = listSpriteAssets();
+
+  // canned procedural textures (proc:*) — baked once for thumbnails; the
+  // drag payload carries the proc id, which sprite layers load natively
+  const procSprites = useMemo(
+    () => PROCEDURAL_FLARES.map((id) => ({
+      id,
+      label: id.replace('proc:', ''),
+      url: bakeFlareCanvas(id)?.toDataURL() ?? '',
+      // the dark dust blob darkens what's behind it — needs the occluding
+      // blend, same as solid PCG bodies
+      occludes: id === 'proc:dust-blob',
+    })),
+    [],
+  );
 
   const upload = async (files: FileList | null) => {
     if (!files) return;
@@ -97,6 +112,25 @@ export function SpritesTab({ onChanged }: SpritesTabProps) {
             >
               ✕
             </button>
+          </figure>
+        ))}
+      </div>
+
+      <h2>Procedural (PCG)</h2>
+      <div className="asset-grid">
+        {procSprites.map((pSprite) => (
+          <figure key={pSprite.id} className="asset-card">
+            <img
+              src={pSprite.url}
+              alt={pSprite.label}
+              draggable
+              title="Drag into the viewport to place on the sky"
+              onDragStart={(e) => {
+                e.dataTransfer.setData('application/x-spacescape-sprite', pSprite.id);
+                e.dataTransfer.setData('application/x-spacescape-occludes', pSprite.occludes ? 'true' : 'false');
+              }}
+            />
+            <figcaption title={pSprite.id}>{pSprite.label}</figcaption>
           </figure>
         ))}
       </div>

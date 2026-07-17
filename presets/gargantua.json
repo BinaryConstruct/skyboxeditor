@@ -11,8 +11,18 @@
       "warpStrength": 0.9,
       "powerAmount": 3.6,
       "shelfAmount": 0.15,
-      "innerColor": { "r": 0.11, "g": 0.06, "b": 0.04, "a": 1 },
-      "outerColor": { "r": 0.0, "g": 0.0, "b": 0.015, "a": 1 },
+      "innerColor": {
+        "r": 0.11,
+        "g": 0.06,
+        "b": 0.04,
+        "a": 1
+      },
+      "outerColor": {
+        "r": 0.0,
+        "g": 0.0,
+        "b": 0.015,
+        "a": 1
+      },
       "previewTextureSize": 512
     },
     {
@@ -57,8 +67,8 @@
     {
       "type": "blackhole",
       "name": "Gargantua",
-      "dirLonDeg": 15,
-      "dirLatDeg": 4,
+      "dirLonDeg": 0,
+      "dirLatDeg": 0,
       "apparentSize": 0.075,
       "lensStrength": 0.5,
       "photonRing": 0.75,
