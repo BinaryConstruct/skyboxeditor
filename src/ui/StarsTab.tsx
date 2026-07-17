@@ -27,7 +27,6 @@ import {
   defaultLayerParams, pcgLayerDescriptor, pcgLayerDescriptors,
 } from '../gen/pcgLayers';
 import { PCG_PRESETS, pcgPresetSpec } from '../gen/pcgPresets';
-import { PROCEDURAL_FLARES, bakeFlareCanvas } from '../render/proceduralFlares';
 import { ColorField, Group, SeedField, SelectField, SliderField, TextField } from './controls';
 
 type GenKind = 'flare' | 'sun' | 'galaxy' | 'planet' | 'nebula' | 'anomaly' | 'pcg';
@@ -689,16 +688,6 @@ export function StarsTab({ onSpritesChanged, onViewportPreview, onBackdrop, onAd
           </button>
         )}
       </Group>
-
-      <h2>Fixed procedural flares</h2>
-      <div className="asset-grid">
-        {PROCEDURAL_FLARES.map((id) => (
-          <figure key={id} className="asset-card">
-            <img src={bakeFlareCanvas(id)?.toDataURL() ?? ''} alt={id} />
-            <figcaption>{id.replace('proc:', '')}</figcaption>
-          </figure>
-        ))}
-      </div>
     </div>
   );
 }
