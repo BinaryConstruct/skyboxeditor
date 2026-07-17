@@ -229,6 +229,14 @@
   color: #e6e9f0;
 }
 
+/* per-format engine hints in the export panel */
+.fmt-engines {
+  font-size: 10px;
+  color: #6f7789;
+  line-height: 1.3;
+  margin: -4px 0 2px;
+}
+
 .export-panel {
   background: #171a22;
   border: 1px solid #3a4460;

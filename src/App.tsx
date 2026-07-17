@@ -600,26 +600,31 @@ export default function App() {
               <label>Cube faces (.zip)</label>
               <input type="checkbox" checked={exportFaces} onChange={(e) => setExportFaces(e.target.checked)} />
             </div>
+            <div className="fmt-engines">Unity 6-sided skybox · Unreal cubemap · source-style engines</div>
             <div className="field-row">
               <label>Equirect (.png)</label>
               <input type="checkbox" checked={exportEquirect} onChange={(e) => setExportEquirect(e.target.checked)} />
             </div>
+            <div className="fmt-engines">Unity panoramic · Godot PanoramaSky · three.js · Blender world</div>
             <div className="field-row">
-              <label title="Radiance RGBE — imports as TextureCube in Unreal">Equirect (.hdr)</label>
+              <label title="Radiance RGBE">Equirect (.hdr)</label>
               <input type="checkbox" checked={exportHdr} onChange={(e) => setExportHdr(e.target.checked)} />
             </div>
+            <div className="fmt-engines">Unreal TextureCube import · HDR environments (Blender, three.js)</div>
             <div className="field-row">
-              <label title="OpenEXR — drop into Godot PanoramaSkyMaterial">Equirect (.exr)</label>
+              <label title="OpenEXR">Equirect (.exr)</label>
               <input type="checkbox" checked={exportExr} onChange={(e) => setExportExr(e.target.checked)} />
             </div>
+            <div className="fmt-engines">Godot PanoramaSkyMaterial · Unity HDR panoramic · DCC tools</div>
             <div className="field-row">
-              <label title="Each visible layer baked solo + composite.json blend recipe + star/billboard/galaxy layers as JSON/CSV particle data (Niagara / GPUParticles / MultiMesh)">Per-layer + data (.zip)</label>
+              <label title="Each visible layer baked solo + composite.json blend recipe + star/billboard/galaxy layers as JSON/CSV particle data">Per-layer + data (.zip)</label>
               <input
                 type="checkbox"
                 checked={exportPerLayer}
                 onChange={(e) => setExportPerLayer(e.target.checked)}
               />
             </div>
+            <div className="fmt-engines">star data for Unreal Niagara · Godot GPUParticles/MultiMesh · Unity VFX Graph</div>
             <div className="field-row">
               <label title="Bake N deterministic seed variations of this preset into one zip (v01/, v02/, … + manifest.json)">Variations</label>
               <input
