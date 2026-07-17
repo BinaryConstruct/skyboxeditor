@@ -1,6 +1,6 @@
 ---
 name: skybox-scenes
-description: Author or edit BinaryConstruct Skybox scene JSON — layer types, field semantics, seeds, and blend factors — validated against the published schema. Use when generating or modifying skybox scenes (.json / the app's Script tab / project.json inside .sspj bundles).
+description: Author or edit BinaryConstruct Skybox scene JSON — layer types, field semantics, seeds, and blend factors — validated against the published schema. Use when generating or modifying skybox scenes (.json / the app's Script tab / project.json inside .zip project bundles).
 ---
 
 # Authoring BinaryConstruct Skybox scenes
@@ -8,8 +8,8 @@ description: Author or edit BinaryConstruct Skybox scene JSON — layer types, f
 A scene is one JSON document: `{"version": 2, "layers": [...]}`. Layers
 composite **in array order** — index 0 is the farthest background, later
 layers draw over earlier ones. The app's **Script** tab edits this document
-live with line-precise errors; the same JSON is `project.json` inside `.sspj`
-bundles.
+live with line-precise errors; the same JSON is `project.json` inside the
+`.zip` project bundles the Save button produces (legacy `.sspj` = same zip).
 
 **Schema (source of truth):**
 <https://skyboxeditor.com/schema/scene.v2.schema.json>

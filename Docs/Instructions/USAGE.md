@@ -81,8 +81,8 @@ generate or transform skyboxes, then paste the result back.
 
 ## Saving and exporting
 
-- **Save** — a `.sspj` project bundle (scene JSON + your sprites +
-  preview). **Open** accepts `.sspj`, plain scene `.json`, and original
+- **Save** — a plain `.zip` project bundle (scene JSON + your sprites +
+  preview). **Open** accepts `.zip` (and legacy `.sspj`), plain scene `.json`, and original
   Spacescape `.xml` saves.
 - **Export** — bake the skybox at 512–4096 px/face:
   - cube faces (PNG zip) or a single equirectangular PNG

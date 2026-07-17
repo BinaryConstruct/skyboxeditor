@@ -2,7 +2,7 @@
  * Stars tab: procedural generation workbench. Pick a generator (star flare,
  * spiral galaxy, planet), tune its parameters with a live preview, and
  * "Bake to Sprites" — the result registers as a sprite asset (persisted in
- * .sspj bundles, selectable in flare layers' Texture picker).
+ * .zip bundles, selectable in flare layers' Texture picker).
  */
 import { useEffect, useMemo, useState } from 'react';
 import { addSpriteAsset } from '../assets/spriteStore';

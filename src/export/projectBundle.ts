@@ -1,7 +1,8 @@
 /**
- * Native project format (.sspj): a zip bundle containing project.json
+ * Native project format: a plain .zip bundle containing project.json
  * (JSON v2 layers), assets/<user sprites>, and preview.png. Legacy
- * Spacescape .xml stays import-only.
+ * Spacescape .xml stays import-only; older .sspj saves are the same zip
+ * under a custom extension and still open.
  */
 import { unzipSync, zipSync } from 'fflate';
 import { fromJsonString, toJsonString, type ImportResult } from '../core/io';

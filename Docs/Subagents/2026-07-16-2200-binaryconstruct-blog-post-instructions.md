@@ -34,4 +34,22 @@ AI-attribution lines; do NOT push.
 
 ## Results
 
-(pending — appended when the agent reports)
+Completed 2026-07-16 ~22:15. Site is Astro 6 (Bun, Tailwind 4, MDX, CF Workers).
+
+- Hero compressed IN PLACE with sharp (dithered 256-color palette PNG,
+  compressionLevel 9): public/images/binaryconstruct-skybox-editor.png,
+  1,201,346 -> 281,191 bytes, 1415x896 unchanged. PNG kept to match the
+  site's all-PNG image convention (webp/jpg would have been smaller but
+  off-convention).
+- New post: src/content/blog/binaryconstruct-skybox-editor/index.md —
+  frontmatter matches newest post's conventions; hero embedded inline at
+  the top of the body (site layout does not auto-render heroes); covers
+  skyboxeditor.com, MIT source, Spacescape lineage, layer stack, geodesic
+  black holes, PCG workbench, exports, AI-friendly scene JSON, Patreon.
+- Verified: bun run build clean; route /blog/binaryconstruct-skybox-editor/
+  generated, hero + schema link render, post listed on /blog index.
+- Commit 49e7695 in D:/dev/ai/profile_websites/binaryconstruct.com
+  ("Add BinaryConstruct Skybox Editor announcement post", repo's existing
+  EEParker identity, no AI attribution). NOT pushed — awaiting owner push.
+- Note: post links github.com/petrocket/spacescape as the original
+  Spacescape repo (the commonly known URL; drop on request).

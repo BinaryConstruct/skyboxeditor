@@ -43,8 +43,8 @@ no accounts, no servers, no telemetry.
   `.hdr`, OpenEXR; per-layer and star-data exports; deterministic batch
   variation zips.
 - **Legacy compatible**: imports original Spacescape `.xml` saves
-  (MSVC `rand()` LCG + exact Perlin port). Native format is `.sspj`
-  (zip: project.json + sprites + preview).
+  (MSVC `rand()` LCG + exact Perlin port). Saves are plain `.zip` bundles
+  (project.json + sprites + preview).
 
 ## Develop
 

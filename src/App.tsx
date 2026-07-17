@@ -267,7 +267,7 @@ export default function App() {
         preview = new Uint8Array(await blob.arrayBuffer());
       }
       downloadBlob(
-        `${presetName}.sspj`,
+        `${presetName}.zip`,
         buildProjectBundle(layers, listSpriteAssets(), preview),
       );
     } catch (err) {
@@ -655,7 +655,7 @@ export default function App() {
             <p className="hint" style={{ margin: 0 }}>
               Bakes visible layers at full resolution. The grid is never
               included. Legacy .xml files can be opened but the native save is
-              a .sspj bundle (json + sprites + preview).
+              a plain .zip bundle (json + sprites + preview).
             </p>
           </div>
         )}
