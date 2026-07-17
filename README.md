@@ -11,6 +11,12 @@ no accounts, no servers, no telemetry.
 > original [Spacescape](http://alexcpeterson.com/spacescape) project
 > (Alex Peterson, MIT).
 
+![BinaryConstruct Skybox Editor](Docs/images/binaryconstruct-skybox-editor.png)
+
+<p align="center">
+  <img src="Docs/images/black-hole.png" alt="Geodesic-lensed black hole with accretion disc, bending a background galaxy" width="580" />
+</p>
+
 ## Features
 
 - **Layer stack** composited with per-layer blend factors:
@@ -51,6 +57,7 @@ npm run build   # tsc + vite -> dist/
 
 ## Docs
 
+- [`Docs/Instructions/USAGE.md`](Docs/Instructions/USAGE.md) — how to use the editor
 - `Docs/EPIC-LIST.md` — high-level goals, status, and current focus
 - `Docs/Design/` — durable design & architecture reference
 - `Docs/Plans/` — task plans and PRDs with acceptance criteria
