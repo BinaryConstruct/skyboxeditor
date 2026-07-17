@@ -57,6 +57,7 @@ export function SpritesTab({ onChanged }: SpritesTabProps) {
 
   return (
     <div className="asset-tab">
+      <p className="drag-hint">← Drag onto scene</p>
       <div className="layer-panel-head">
         <h2>Your sprites</h2>
         <span className="add-buttons">
