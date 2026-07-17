@@ -668,7 +668,7 @@ export default function App() {
         )}
 
         {tab === 'layers' && (
-          <>
+          <div className="asset-tab layers-tab">
             <label className="field">
               Preset
               <select value={presetName} onChange={(e) => setPresetName(e.target.value)}>
@@ -707,7 +707,7 @@ export default function App() {
               Drag to look around · wheel to zoom. Edits re-bake only the
               changed layer.
             </p>
-          </>
+          </div>
         )}
 
         {tab === 'stars' && (

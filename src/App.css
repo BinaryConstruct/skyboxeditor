@@ -404,11 +404,10 @@
   cursor: default;
 }
 
-/* inspector — its own scroll-contained panel well, raised groups inside */
+/* inspector — a panel well with raised groups inside; the layers tab
+   scrolls as a whole, so the inspector grows to its natural height */
 .inspector {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
+  flex: none;
   display: flex;
   flex-direction: column;
   gap: 6px;
