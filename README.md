@@ -49,38 +49,6 @@ npm test        # vitest (determinism, IO round-trips, geodesics, physics)
 npm run build   # tsc + vite -> dist/
 ```
 
-## Hosting
-
-Deployed on **Cloudflare Workers** (free tier, static assets) via Workers
-Builds' GitHub integration. Cloudflare deploys on push to `main`; GitHub
-Actions runs the CI gate (lint/test/build) and a ruleset requires the
-`verify` check before merge.
-
-**Workers Builds settings** (Settings → Build):
-
-| Setting | Value |
-| --- | --- |
-| Build command | `npm run build` |
-| Deploy command | `npx wrangler deploy` (default) |
-| Root directory | `/` |
-
-Most of this is already carried in the repo, so the dashboard config stays
-minimal:
-
-- **`wrangler.toml`** declares an assets-only Worker serving `dist/`
-  (`[assets] directory = "./dist"`, no `main` entry point).
-- **`.node-version`** pins Node `24` for the build image (kept in sync with
-  `.github/workflows/ci.yml`).
-- **`public/_headers`** (copied to `dist/_headers`) sets an immutable long cache
-  for hashed `/assets/*` and `Access-Control-Allow-Origin: *` + a moderate cache
-  for the cross-origin `/schema/*` JSON schema.
-- **`.npmrc`** sets `playwright_skip_browser_download=1`, so the `playwright`
-  devDependency does **not** pull ~300MB of browsers during the Cloudflare build.
-  This is repo-side — **no Cloudflare dashboard environment variable is needed.**
-  (If a future npm ever drops support for custom `.npmrc` keys, set the
-  `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1` build environment variable in the
-  dashboard as a fallback.)
-
 ## Docs
 
 - `Docs/EPIC-LIST.md` — high-level goals, status, and current focus
