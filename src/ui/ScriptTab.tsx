@@ -69,6 +69,15 @@ export function ScriptTab({ layers, onApply }: ScriptTabProps) {
         <a href="https://skyboxeditor.com/schema/scene.v2.schema.json" target="_blank" rel="noreferrer">
           scene.v2.schema.json
         </a>
+        {' · '}
+        <a
+          href="https://github.com/BinaryConstruct/skyboxeditor/blob/main/.claude/skills/skybox-scenes/SKILL.md"
+          target="_blank"
+          rel="noreferrer"
+          title="Scene-authoring guide for AI assistants (Claude Code skill)"
+        >
+          AI authoring skill
+        </a>
       </p>
 
       <div className={`script-editor${error ? ' invalid' : ''}`}>
