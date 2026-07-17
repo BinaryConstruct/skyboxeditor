@@ -48,7 +48,6 @@ export default function App() {
   const [presetName, setPresetName] = useState(initialPreset);
   const [layers, setLayers] = useState<Layer[]>([]);
   const [selected, setSelected] = useState(0);
-  const [hidden, setHidden] = useState<ReadonlySet<number>>(new Set());
   const [grid, setGrid] = useState(false);
   const [spriteVersion, setSpriteVersion] = useState(0);
   const [exportOpen, setExportOpen] = useState(false);
@@ -111,7 +110,6 @@ export default function App() {
   const loadLayers = (next: Layer[], keepSelection = false) => {
     dirtyRef.current.clear();
     setLayers(next);
-    setHidden(new Set());
     if (!keepSelection) setSelected(0);
     else setSelected((s) => Math.min(s, Math.max(0, next.length - 1)));
     sceneRef.current?.setLayers(next);
@@ -187,11 +185,14 @@ export default function App() {
   };
 
   const toggleLayer = (index: number) => {
-    const next = new Set(hidden);
-    if (next.has(index)) next.delete(index);
-    else next.add(index);
-    setHidden(next);
-    sceneRef.current?.setLayerVisible(index, !next.has(index));
+    const layer = layersRef.current[index];
+    if (!layer) return;
+    const show = layer.visible === false;
+    const next = { ...layer, visible: show ? undefined : false } as Layer;
+    setLayers((prev) => prev.map((l, i) => (i === index ? next : l)));
+    // a pending debounced edit must not resurrect the pre-toggle flag
+    if (dirtyRef.current.has(index)) dirtyRef.current.set(index, next);
+    sceneRef.current?.setLayerVisible(index, show);
   };
 
   const moveLayer = (index: number, delta: -1 | 1) => {
@@ -261,7 +262,7 @@ export default function App() {
     setSaving(true);
     try {
       let preview: Uint8Array | null = null;
-      const bake = await scene.bakeExport(layers, 128, true);
+      const bake = await scene.bakeExport(layers.filter((l) => l.visible !== false), 128, true);
       if (bake.equirect) {
         const blob = await floatToPngBlob(bake.equirect.data, bake.equirect.width, bake.equirect.height);
         preview = new Uint8Array(await blob.arrayBuffer());
@@ -442,7 +443,7 @@ export default function App() {
     if (!scene || exporting) return;
     setExporting(true);
     try {
-      const visibleLayers = layers.filter((_, i) => !hidden.has(i));
+      const visibleLayers = layers.filter((l) => l.visible !== false);
       if (exportBatch > 1) {
         await runBatchExport(visibleLayers, exportBatch);
         setExportOpen(false);
@@ -681,7 +682,6 @@ export default function App() {
             <LayerList
               layers={layers}
               selected={selected}
-              hidden={hidden}
               onSelect={setSelected}
               onToggleVisible={toggleLayer}
               onMove={moveLayer}

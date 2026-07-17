@@ -45,6 +45,9 @@ you don't need; the app re-serializes canonically.
 - **Placement** (sun/planet/sprite/blackhole/galaxy): `dirLonDeg` (−180..180),
   `dirLatDeg` (−90..90), `apparentSize` (angular size; sun/planet ≤1),
   `rotationDeg`; `locked: true` prevents viewport dragging.
+- **Visibility**: `visible: false` hides a layer (the eye toggle) and
+  excludes it from exports; omitted means visible — the app only ever
+  writes the `false` state.
 - **Additive layers ignore alpha** — brightness must come from RGB and
   `hdrMultiplier`, not the alpha channel.
 - **HDR**: `hdrPower`/`hdrMultiplier` shape export brightness beyond 1.0 for

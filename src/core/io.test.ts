@@ -3,6 +3,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { exportLegacyXml, fromJsonString, importLegacyXml, toJsonString } from './io';
+import { defaultLayer } from './layers';
 
 // vitest runs with cwd = project root (import.meta.url is unusable under jsdom)
 const PRESETS_DIR = join(process.cwd(), 'presets');
@@ -61,6 +62,30 @@ describe('round-trips', () => {
   it('rejects non-v2 JSON', () => {
     expect(() => fromJsonString('{"version":1,"layers":[]}')).toThrow();
     expect(() => fromJsonString('{}')).toThrow();
+  });
+
+  it('persists visible=false and locked through both formats', () => {
+    const noise = defaultLayer('noise', 'Hidden Nebula');
+    noise.visible = false;
+    const sun = defaultLayer('sun', 'Pinned Sun');
+    sun.locked = true;
+
+    const viaJson = fromJsonString(toJsonString([noise, sun])).layers;
+    expect(viaJson[0].visible).toBe(false);
+    expect(viaJson[1].locked).toBe(true);
+
+    const viaXml = importLegacyXml(exportLegacyXml([noise, sun]));
+    expect(viaXml.warnings).toEqual([]);
+    expect(viaXml.layers[0].visible).toBe(false);
+    expect(viaXml.layers[1].locked).toBe(true);
+  });
+
+  it("drops the original's redundant <visible>true</visible> on import", () => {
+    const { layers, warnings } = importLegacyXml(
+      '<spacescapelayers><layer><type>points</type><visible>true</visible></layer></spacescapelayers>',
+    );
+    expect(warnings).toEqual([]);
+    expect(layers[0].visible).toBeUndefined();
   });
 });
 

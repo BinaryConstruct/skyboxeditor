@@ -214,6 +214,9 @@
                     "color"
                   ]
                 }
+              },
+              "visible": {
+                "type": "boolean"
               }
             },
             "required": [
@@ -426,6 +429,9 @@
               },
               "dataFile": {
                 "type": "string"
+              },
+              "visible": {
+                "type": "boolean"
               }
             },
             "required": [
@@ -671,6 +677,9 @@
                 "items": {
                   "type": "string"
                 }
+              },
+              "visible": {
+                "type": "boolean"
               }
             },
             "required": [
@@ -897,6 +906,9 @@
                     "color"
                   ]
                 }
+              },
+              "visible": {
+                "type": "boolean"
               }
             },
             "required": [
@@ -1029,6 +1041,9 @@
               },
               "locked": {
                 "type": "boolean"
+              },
+              "visible": {
+                "type": "boolean"
               }
             },
             "required": [
@@ -1142,6 +1157,9 @@
                 "type": "number"
               },
               "locked": {
+                "type": "boolean"
+              },
+              "visible": {
                 "type": "boolean"
               }
             },
@@ -1371,6 +1389,9 @@
               },
               "locked": {
                 "type": "boolean"
+              },
+              "visible": {
+                "type": "boolean"
               }
             },
             "required": [
@@ -1487,6 +1508,9 @@
               },
               "locked": {
                 "type": "boolean"
+              },
+              "visible": {
+                "type": "boolean"
               }
             },
             "required": [
@@ -1570,6 +1594,9 @@
                 "type": "number"
               },
               "locked": {
+                "type": "boolean"
+              },
+              "visible": {
                 "type": "boolean"
               }
             },

@@ -19,7 +19,6 @@ const TYPE_LABELS: Record<LayerType, string> = {
 interface LayerListProps {
   layers: Layer[];
   selected: number;
-  hidden: ReadonlySet<number>;
   onSelect: (index: number) => void;
   onToggleVisible: (index: number) => void;
   onMove: (index: number, delta: -1 | 1) => void;
@@ -33,7 +32,7 @@ interface LayerListProps {
 const isPositional = (layer: Layer): boolean => 'dirLonDeg' in layer;
 
 export function LayerList({
-  layers, selected, hidden,
+  layers, selected,
   onSelect, onToggleVisible, onMove, onDuplicate, onDelete, onAdd, onToggleLock,
 }: LayerListProps) {
   return (
@@ -59,17 +58,17 @@ export function LayerList({
             key={i}
             className={[
               i === selected ? 'selected' : '',
-              hidden.has(i) ? 'hidden-layer' : '',
+              layer.visible === false ? 'hidden-layer' : '',
             ].join(' ')}
             onClick={() => onSelect(i)}
           >
             <button
               type="button"
               className="eye"
-              title={hidden.has(i) ? 'Show layer' : 'Hide layer'}
+              title={layer.visible === false ? 'Show layer' : 'Hide layer'}
               onClick={(e) => { e.stopPropagation(); onToggleVisible(i); }}
             >
-              {hidden.has(i) ? '◌' : '●'}
+              {layer.visible === false ? '◌' : '●'}
             </button>
             <span className={`badge badge-${layer.type}`}>{TYPE_LABELS[layer.type]}</span>
             <span className="layer-name" title={layer.name}>{layer.name}</span>

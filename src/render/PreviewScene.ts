@@ -222,7 +222,8 @@ export class PreviewScene {
 
     layers.forEach((layer, index) => {
       const obj = this.buildLayer(layer, index);
-      obj.appVisible = true;
+      obj.appVisible = layer.visible !== false;
+      obj.group.visible = obj.appVisible && !this.skyHidden;
       this.layerObjects.push(obj);
       this.scene.add(obj.group);
     });
@@ -234,7 +235,7 @@ export class PreviewScene {
   updateLayer(index: number, layer: Layer): void {
     const old = this.layerObjects[index];
     if (!old) return;
-    const visible = old.appVisible ?? true;
+    const visible = layer.visible !== false;
     this.scene.remove(old.group);
     old.dispose();
 

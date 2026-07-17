@@ -45,6 +45,8 @@ export interface LayerCommon {
   destBlendFactor: BlendFactor;
   hdrPower?: number;
   hdrMultiplier?: number;
+  /** eye toggle; undefined = visible (only `false` is persisted) */
+  visible?: boolean;
   /** positional layers: excluded from viewport drag-picking when true */
   locked?: boolean;
 }

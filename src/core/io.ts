@@ -45,17 +45,21 @@ const MASK: Record<string, FieldKind> = {
   maskWarpScale: 'real',
 };
 
-/** 0.5.x params not present in every save; emitted only when set. */
+/**
+ * Params not present in every save; emitted only when set. `visible` matches
+ * the original's per-layer param (we persist it only when false); the rest
+ * are 0.5.x-era or our own extensions.
+ */
 const OPTIONAL: Record<LayerType, Record<string, FieldKind>> = {
-  noise: { hdrPower: 'real', hdrMultiplier: 'real', colorRamp: 'ramp' },
-  points: { hdrPower: 'real', hdrMultiplier: 'real', dataFile: 'string' },
-  billboards: { hdrPower: 'real', hdrMultiplier: 'real', dataFile: 'string', huePalette: 'palette', textureMix: 'stringList' },
-  volumetric: { hdrPower: 'real', hdrMultiplier: 'real', colorRamp: 'ramp' },
-  galaxy: { hdrPower: 'real', hdrMultiplier: 'real', locked: 'bool' },
-  sun: { hdrPower: 'real', hdrMultiplier: 'real', locked: 'bool' },
-  planet: { hdrPower: 'real', hdrMultiplier: 'real', locked: 'bool' },
-  blackhole: { hdrPower: 'real', hdrMultiplier: 'real', locked: 'bool' },
-  sprite: { hdrPower: 'real', hdrMultiplier: 'real', locked: 'bool' },
+  noise: { hdrPower: 'real', hdrMultiplier: 'real', colorRamp: 'ramp', visible: 'bool' },
+  points: { hdrPower: 'real', hdrMultiplier: 'real', dataFile: 'string', visible: 'bool' },
+  billboards: { hdrPower: 'real', hdrMultiplier: 'real', dataFile: 'string', huePalette: 'palette', textureMix: 'stringList', visible: 'bool' },
+  volumetric: { hdrPower: 'real', hdrMultiplier: 'real', colorRamp: 'ramp', visible: 'bool' },
+  galaxy: { hdrPower: 'real', hdrMultiplier: 'real', locked: 'bool', visible: 'bool' },
+  sun: { hdrPower: 'real', hdrMultiplier: 'real', locked: 'bool', visible: 'bool' },
+  planet: { hdrPower: 'real', hdrMultiplier: 'real', locked: 'bool', visible: 'bool' },
+  blackhole: { hdrPower: 'real', hdrMultiplier: 'real', locked: 'bool', visible: 'bool' },
+  sprite: { hdrPower: 'real', hdrMultiplier: 'real', locked: 'bool', visible: 'bool' },
 };
 
 const FIELDS: Record<LayerType, Record<string, FieldKind>> = {
@@ -370,6 +374,8 @@ export function layerFromParams(params: Record<string, string>, warnings: string
     }
     layer[key] = parseField(kind, value);
   }
+  // original saves always carry <visible>; only the false state is worth keeping
+  if (layer['visible'] === true) delete layer['visible'];
 
   return layer as unknown as Layer;
 }
@@ -529,6 +535,7 @@ function normalizeLayer(entry: Record<string, unknown>, type: LayerType): Layer 
       base[key] = kind === 'string' ? String(v) : coerceNumber(v, 0);
     }
   }
+  if (base['visible'] === true) delete base['visible'];
 
   return base as unknown as Layer;
 }
