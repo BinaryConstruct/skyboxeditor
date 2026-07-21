@@ -35,6 +35,11 @@ added, completed, blocked, materially descoped, or superseded.
   Cloudflare Workers deploy — live at skyboxeditor.binaryconstruct.workers.dev.
   Remaining: attach the skyboxeditor.com custom domain (dashboard).
 
+- **E9 — Mobile / narrow-view usability** ✅ Collapsible sidebar (single
+  floating toggle; slide-in drawer overlay below 760px, starts collapsed),
+  scene-lock button (drags always pan, quads not grabbable), two-finger
+  pinch zoom on the viewport (continuous FOV, OrbitControls-safe).
+
 ## In progress / next
 
 - **E8 — Layer/PCG consolidation** 🔜 Positional layers gain full generator

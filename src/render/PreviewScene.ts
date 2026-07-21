@@ -152,8 +152,31 @@ export class PreviewScene {
 
     // direct manipulation: grab a placeable quad and drag it on the sphere
     this.onPointerDown = (e: PointerEvent) => {
+      if (e.pointerType === 'touch') {
+        // 3rd+ fingers during a pinch are ignored outright and hidden from
+        // OrbitControls (which, like the pinch fingers, never saw them land)
+        if (this.pinch) {
+          this.pinchExtra.add(e.pointerId);
+          e.stopImmediatePropagation();
+          return;
+        }
+        this.touchPts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        // second finger = pinch zoom: cancel any grab, freeze OrbitControls
+        // rotation by hiding this and all further pinch events from it
+        if (this.touchPts.size === 2) {
+          if (this.dragIndex !== null) this.endDrag(false);
+          const [a, b] = [...this.touchPts.values()];
+          this.pinch = {
+            startDist: Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)),
+            startFov: this.camera.fov,
+          };
+          e.stopImmediatePropagation();
+          return;
+        }
+      }
       if (e.button !== 0 || this.dragIndex !== null) return;
-      const hit = this.pickPlaceable(e);
+      // scene lock: drags always pan the view, quads can't be grabbed
+      const hit = this.sceneLocked ? null : this.pickPlaceable(e);
       if (hit === null) return;
       this.dragIndex = hit;
       this.dragPointerId = e.pointerId;
@@ -163,6 +186,22 @@ export class PreviewScene {
       e.stopImmediatePropagation(); // keep OrbitControls from starting a rotate
     };
     this.onPointerMove = (e: PointerEvent) => {
+      if (this.pinchExtra.has(e.pointerId)) {
+        e.stopPropagation();
+        return;
+      }
+      if (this.pinch && e.pointerType === 'touch' && this.touchPts.has(e.pointerId)) {
+        this.touchPts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (this.touchPts.size === 2) {
+          const [a, b] = [...this.touchPts.values()];
+          const dist = Math.max(1, Math.hypot(a.x - b.x, a.y - b.y));
+          this.setFov(this.pinch.startFov * (this.pinch.startDist / dist));
+        }
+        // swallow every move until all fingers lift so OrbitControls (whose
+        // rotate anchor is stale from before the pinch) can't jump the view
+        e.stopPropagation();
+        return;
+      }
       if (this.dragIndex === null || e.pointerId !== this.dragPointerId) return;
       const obj = this.layerObjects[this.dragIndex];
       if (!obj?.placeable) return;
@@ -172,11 +211,13 @@ export class PreviewScene {
       obj.placeable.place(lonDeg, latDeg);
     };
     this.onPointerUp = (e: PointerEvent) => {
+      if (this.releasePinchPointer(e)) return;
       if (this.dragIndex === null || e.pointerId !== this.dragPointerId) return;
       this.endDrag(true);
     };
     // any way the pointer can die must end the drag, or navigation locks up
     this.onPointerCancel = (e: PointerEvent) => {
+      if (this.releasePinchPointer(e)) return;
       if (this.dragIndex === null || e.pointerId !== this.dragPointerId) return;
       this.endDrag(false);
     };
@@ -193,11 +234,7 @@ export class PreviewScene {
       const levels = PreviewScene.ZOOM_LEVELS;
       const step = e.deltaY > 0 ? 1 : -1; // wheel down = zoom out
       this.zoomIndex = Math.min(levels.length - 1, Math.max(0, this.zoomIndex + step));
-      this.camera.fov = levels[this.zoomIndex];
-      this.camera.updateProjectionMatrix();
-      // keep drag speed proportional to the visible field
-      this.controls.rotateSpeed = -0.35 * (this.camera.fov / 80);
-      this.applyStarZoom();
+      this.setFov(levels[this.zoomIndex]);
     };
     canvas.addEventListener('wheel', this.onWheel, { passive: false });
 
@@ -252,7 +289,19 @@ export class PreviewScene {
   // ------------------------------------------------- direct manipulation
   /** fired when a drag ends: the App commits lon/lat to the layer state */
   onLayerPlaced?: (index: number, lonDeg: number, latDeg: number) => void;
+  /**
+   * fired when a moved drag is cancelled (pinch started, scene locked,
+   * pointer died): the App should rebuild the layer from its stored state
+   * so the quad snaps back instead of lingering at the uncommitted spot
+   */
+  onLayerDragCancelled?: (index: number) => void;
   private raycaster = new THREE.Raycaster();
+  private sceneLocked = false;
+  /** live touch-pointer positions on the canvas (pinch-zoom tracking) */
+  private touchPts = new Map<number, { x: number; y: number }>();
+  private pinch: { startDist: number; startFov: number } | null = null;
+  /** extra fingers that landed mid-pinch: fully ignored until they lift */
+  private pinchExtra = new Set<number>();
   private dragIndex: number | null = null;
   private dragPointerId: number | null = null;
   private dragLonLat: { lonDeg: number; latDeg: number } | null = null;
@@ -261,6 +310,61 @@ export class PreviewScene {
   private onPointerUp: (e: PointerEvent) => void;
   private onPointerCancel: (e: PointerEvent) => void;
   private onContextMenu!: (e: Event) => void;
+
+  /**
+   * Scene lock: viewport drags always pan the view; placeable quads can't
+   * be grabbed until unlocked.
+   */
+  setSceneLocked(locked: boolean): void {
+    this.sceneLocked = locked;
+    if (locked && this.dragIndex !== null) this.endDrag(false);
+  }
+
+  /** Continuous FOV zoom (pinch + wheel), clamped to the wheel's range. */
+  private setFov(fov: number): void {
+    const levels = PreviewScene.ZOOM_LEVELS;
+    this.camera.fov = Math.min(levels[levels.length - 1], Math.max(levels[0], fov));
+    this.camera.updateProjectionMatrix();
+    // keep drag speed proportional to the visible field
+    this.controls.rotateSpeed = -0.35 * (this.camera.fov / 80);
+    this.applyStarZoom();
+  }
+
+  /**
+   * Pointer-up/cancel bookkeeping for pinch zoom. Returns true when the
+   * event belonged to an active pinch. The event still propagates —
+   * OrbitControls must see its tracked finger lift to clean up (it never
+   * saw the second finger, and moves stay swallowed until all fingers are
+   * up, so its stale rotate anchor can't jump the view). The pinch ends
+   * once the last finger lifts, snapping the wheel's zoom index to the
+   * nearest discrete level so wheel zoom continues from the pinched FOV.
+   */
+  private releasePinchPointer(e: PointerEvent): boolean {
+    if (e.pointerType !== 'touch') return false;
+    // ignored 3rd+ finger lifting: swallow it — OrbitControls never saw it
+    // land, and processing its up would corrupt its single-pointer state
+    if (this.pinchExtra.has(e.pointerId)) {
+      this.pinchExtra.delete(e.pointerId);
+      e.stopPropagation();
+      return true;
+    }
+    // losing pointer capture (e.g. endDrag releasing it when a pinch begins)
+    // does NOT mean the finger lifted — keep tracking it
+    if (e.type === 'lostpointercapture') return false;
+    const inPinch = this.pinch !== null && this.touchPts.has(e.pointerId);
+    this.touchPts.delete(e.pointerId);
+    if (!inPinch) return false;
+    if (this.touchPts.size === 0) {
+      this.pinch = null;
+      const levels = PreviewScene.ZOOM_LEVELS;
+      this.zoomIndex = levels.reduce(
+        (best, fov, i) =>
+          Math.abs(fov - this.camera.fov) < Math.abs(levels[best] - this.camera.fov) ? i : best,
+        0,
+      );
+    }
+    return true;
+  }
 
   /** Single cleanup path for every way a drag can end. */
   private endDrag(commit: boolean): void {
@@ -274,8 +378,9 @@ export class PreviewScene {
       canvas.releasePointerCapture(pointerId);
     }
     canvas.style.cursor = '';
-    if (commit && index !== null && this.dragLonLat) {
-      this.onLayerPlaced?.(index, this.dragLonLat.lonDeg, this.dragLonLat.latDeg);
+    if (index !== null && this.dragLonLat) {
+      if (commit) this.onLayerPlaced?.(index, this.dragLonLat.lonDeg, this.dragLonLat.latDeg);
+      else this.onLayerDragCancelled?.(index);
     }
     this.dragLonLat = null;
   }
@@ -1332,6 +1437,7 @@ export class PreviewScene {
     this.wheelTarget.removeEventListener('pointercancel', this.onPointerCancel);
     this.wheelTarget.removeEventListener('lostpointercapture', this.onPointerCancel);
     this.wheelTarget.removeEventListener('contextmenu', this.onContextMenu);
+    this.onLayerDragCancelled = undefined; // no rebuilds into a dying scene
     this.endDrag(false);
     this.setPcgPreview(null);
     this.renderer.setAnimationLoop(null);

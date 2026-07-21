@@ -1,14 +1,16 @@
 .app {
+  --sidebar-w: 400px;
   display: flex;
   /* controls live in the right-hand sidebar; the preview fills the left */
   flex-direction: row-reverse;
   width: 100vw;
   height: 100vh;
+  height: 100dvh; /* mobile browsers: exclude the dynamic URL bar */
   overflow: hidden;
 }
 
 .sidebar {
-  width: 400px;
+  width: var(--sidebar-w);
   flex: none;
   padding: 14px;
   background: #14161c;
@@ -17,6 +19,106 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+/* collapsed: the viewport takes the full window */
+.sidebar-closed .sidebar {
+  display: none;
+}
+
+/* floating viewport buttons riding the sidebar's outer edge:
+   sidebar show/hide + scene lock */
+.sidebar-toggle,
+.scene-lock {
+  position: fixed;
+  top: 10px;
+  right: calc(var(--sidebar-w) + 10px);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  background: #14161ccc;
+  color: #aeb6c8;
+  border: 1px solid #303645;
+  border-radius: 8px;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+}
+
+.sidebar-toggle:hover,
+.scene-lock:hover {
+  background: #262c38;
+  color: #e6e9f0;
+}
+
+.sidebar-closed .sidebar-toggle,
+.sidebar-closed .scene-lock {
+  right: 10px;
+}
+
+.scene-lock {
+  top: 52px;
+}
+
+.scene-lock.locked {
+  color: #d9a441;
+  border-color: #6a5320;
+}
+
+/* tap-outside-to-close backdrop; only exists in drawer (narrow) mode */
+.sidebar-scrim {
+  display: none;
+}
+
+/* narrow / vertical screens: the sidebar becomes a slide-in drawer that
+   overlays the viewport instead of squeezing it */
+@media (max-width: 760px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(var(--sidebar-w), 100vw);
+    height: 100dvh;
+    z-index: 10;
+    box-shadow: -12px 0 32px rgba(0, 0, 0, 0.55);
+    transition: transform 0.22s ease, visibility 0.22s;
+  }
+
+  .sidebar-closed .sidebar {
+    display: flex; /* stay mounted so the slide-out animates */
+    transform: translateX(105%);
+    visibility: hidden;
+  }
+
+  .sidebar-toggle,
+  .scene-lock,
+  .sidebar-closed .sidebar-toggle,
+  .sidebar-closed .scene-lock {
+    right: 10px;
+  }
+
+  /* the drawer overlays the lock button's spot — tuck it under the toggle,
+     above the drawer, only while the drawer is closed */
+  .sidebar-open .scene-lock {
+    display: none;
+  }
+
+  .sidebar-open .sidebar-scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 9;
+    background: rgba(0, 0, 0, 0.4);
+  }
+
+  /* clear the floating toggle button overlapping the titlebar corner */
+  .titlebar {
+    padding-right: 44px;
+  }
 }
 
 /* dark scrollbars to match the theme */
@@ -583,6 +685,8 @@
   width: 100%;
   height: 100%;
   display: block;
+  /* pinch/drag are scene gestures — never page scroll/zoom */
+  touch-action: none;
 }
 
 /* lock toggle in layer rows: dim when unlocked, amber when locked */

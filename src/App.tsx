@@ -43,9 +43,17 @@ function initialPreset(): string {
 
 type Tab = 'layers' | 'stars' | 'sprites' | 'script';
 
+/** Below this width the sidebar overlays the viewport as a drawer. */
+const NARROW_QUERY = '(max-width: 760px)';
+
 export default function App() {
   const [tab, setTab] = useState<Tab>('layers');
+  // start collapsed on narrow/vertical screens so the scene is visible first
+  const [sidebarOpen, setSidebarOpen] = useState(
+    () => !window.matchMedia(NARROW_QUERY).matches,
+  );
   const [presetName, setPresetName] = useState(initialPreset);
+  const [sceneLocked, setSceneLocked] = useState(false);
   const [layers, setLayers] = useState<Layer[]>([]);
   const [selected, setSelected] = useState(0);
   const [grid, setGrid] = useState(false);
@@ -92,6 +100,13 @@ export default function App() {
       setLayers((prev) => prev.map((l, i) => (i === index ? next : l)));
       setSelected(index);
       scene.updateLayer(index, next);
+    };
+
+    // cancelled drag (pinch/lock/pointer loss): snap the quad back to the
+    // committed coordinates instead of leaving it at the aborted position
+    scene.onLayerDragCancelled = (index) => {
+      const layer = layersRef.current[index];
+      if (layer) scene.updateLayer(index, layer);
     };
 
     const observer = new ResizeObserver(() => {
@@ -516,8 +531,57 @@ export default function App() {
   );
 
   return (
-    <div className="app">
-      <aside className="sidebar">
+    <div className={`app ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
+      <button
+        type="button"
+        className="sidebar-toggle"
+        aria-expanded={sidebarOpen}
+        aria-controls="sidebar"
+        aria-label={sidebarOpen ? 'Hide controls' : 'Show controls'}
+        title={sidebarOpen ? 'Hide controls' : 'Show controls'}
+        onClick={() => setSidebarOpen((o) => !o)}
+      >
+        {sidebarOpen ? (
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M9 6l6 6-6 6" />
+          </svg>
+        ) : (
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M4 8h3.5M12.5 8H20" />
+            <path d="M4 16h8.5M17.5 16H20" />
+            <circle cx="10" cy="8" r="2.5" />
+            <circle cx="15" cy="16" r="2.5" />
+          </svg>
+        )}
+      </button>
+      <button
+        type="button"
+        className={`scene-lock ${sceneLocked ? 'locked' : ''}`}
+        aria-pressed={sceneLocked}
+        aria-label={sceneLocked ? 'Unlock scene (allow dragging layers)' : 'Lock scene (pan only)'}
+        title={sceneLocked ? 'Scene locked: drags pan the view. Click to allow dragging layers.' : 'Lock scene: drags pan the view instead of moving layers'}
+        onClick={() => {
+          const next = !sceneLocked;
+          setSceneLocked(next);
+          sceneRef.current?.setSceneLocked(next);
+        }}
+      >
+        {sceneLocked ? (
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <rect x="5" y="11" width="14" height="9" rx="2" />
+            <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+          </svg>
+        ) : (
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <rect x="5" y="11" width="14" height="9" rx="2" />
+            <path d="M8 11V7a4 4 0 0 1 7.7-1.5" />
+          </svg>
+        )}
+      </button>
+      {sidebarOpen && (
+        <div className="sidebar-scrim" onClick={() => setSidebarOpen(false)} />
+      )}
+      <aside className="sidebar" id="sidebar">
         <div className="titlebar">
           <h1>BinaryConstruct Skybox Editor<span className="tagline">Free procedural stellar skybox editor</span></h1>
           <span className="icon-links">
